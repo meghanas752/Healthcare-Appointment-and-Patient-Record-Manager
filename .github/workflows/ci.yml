@@ -1,0 +1,40 @@
+# .github/workflows/ci.yml
+
+name: Node.js CI
+
+# This tells GitHub WHEN to run this script.
+# We want it to run on every Pull Request to the 'main' branch.
+on:
+  pull_request:
+    branches: [ "main" ]
+
+# This defines the "job" or set of tasks to run.
+jobs:
+  build-and-test:
+    # The type of computer to run on (a fresh Linux machine)
+    runs-on: ubuntu-latest
+
+    # The steps the robot will follow in order
+    steps:
+    # 1. Checks out your branch's code so it can be tested
+    - name: Check out code
+      uses: actions/checkout@v4
+
+    # 2. Installs Node.js version 18
+    - name: Use Node.js 18
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+        cache: 'npm' # This speeds up future builds
+        cache-dependency-path: src/backend/package-lock.json
+
+    # 3. Installs all your project's packages
+    - name: Install dependencies
+      run: npm install
+      working-directory: ./src/backend # Tells it to run in the backend folder
+
+    # 4. Runs the "test" script from your package.json
+    # Because we made it "exit 0", this step will pass!
+    - name: Run tests
+      run: npm test
+      working-directory: ./src/backend

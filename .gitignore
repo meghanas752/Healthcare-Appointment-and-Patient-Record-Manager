@@ -3,6 +3,7 @@
 # Dependencies
 /node_modules
 /src/backend/node_modules
+/src/server/node_modules
 
 # Environment variables
 .env
@@ -10,3 +11,5 @@
 
 # Log files
 npm-debug.log*
+
+/src/server/.env

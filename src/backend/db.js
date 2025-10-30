@@ -1,6 +1,7 @@
+// src/backend/db.js
 // This file handles all database connections and queries
 
-// Note the path to the .env file
+// Note the path to the .env file, relative from this file
 require('dotenv').config({ path: __dirname + '/../server/.env' }); 
 const mysql = require('mysql2/promise');
 
@@ -44,7 +45,38 @@ async function getPatientHistory(patientId) {
   return combinedHistory;
 }
 
+
+/**
+ * Searches for a patient by exact name, gets their ID,
+ * and then returns their complete history.
+ */
+async function getPatientHistoryByName(patientName) {
+  // 1. Find the patient's ID
+  const [patientRows] = await pool.query(
+    'SELECT id FROM patients WHERE name = ? LIMIT 1',
+    [patientName]
+  );
+
+  if (!patientRows || patientRows.length === 0) {
+    // No patient found with that name
+    return { patient: null, history: [] };
+  }
+
+  const patient = patientRows[0];
+  const patientId = patient.id;
+
+  // 2. Get their history using the function we already built
+  const history = await getPatientHistory(patientId);
+
+  return { patient, history };
+}
+
+
+// **THIS IS THE FIX:**
+// The module.exports block is now at the end of the file,
+// after all functions have been defined.
 module.exports = {
   pool, // Export pool for other files to use
-  getPatientHistory
+  getPatientHistory,
+  getPatientHistoryByName 
 };

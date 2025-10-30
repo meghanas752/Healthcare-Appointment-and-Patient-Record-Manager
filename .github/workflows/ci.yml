@@ -6,7 +6,7 @@ name: Node.js CI
 # We want it to run on every Pull Request to the 'main' branch.
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main","develop" ]
 
 # This defines the "job" or set of tasks to run.
 jobs:

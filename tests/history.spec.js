@@ -8,10 +8,7 @@ process.env.NODE_ENV = 'test';
 
 describe('GET /api/patients/:id/history', () => {
 
-  // After all tests are done, close the database pool
-  afterAll(async () => {
-    await pool.end();
-  });
+ 
 
   test('should return a list of history items for patient 1', async () => {
     const patientId = 1; // We know patient 1 has data from our SQL setup
@@ -54,4 +51,44 @@ describe('GET /api/patients/:id/history', () => {
     expect(Array.isArray(response.body)).toBe(true);
     expect(response.body.length).toBe(0);
   });
+});
+
+
+describe('GET /api/patients/search', () => {
+
+  // afterAll() is already defined, so we don't need it again
+
+  test('should find patient "Priya Sharma" and return her history', async () => {
+    const name = "Priya Sharma";
+    const response = await request(app)
+      .get(`/api/patients/search?name=${encodeURIComponent(name)}`); // Use encodeURIComponent for names with spaces
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body.patient.id).toBe(2); // Should be patient 2
+    expect(response.body.history.length).toBe(3);
+    expect(response.body.history[0].details).toBe('Seasonal Allergies');
+  });
+
+  test('should return 404 for a non-existent patient name', async () => {
+    const name = "Fake Name";
+    const response = await request(app)
+      .get(`/api/patients/search?name=${name}`);
+
+    expect(response.statusCode).toBe(404);
+    expect(response.body.message).toBe('Patient not found.');
+  });
+  
+  test('should return 400 if no name query is provided', async () => {
+    const response = await request(app)
+      .get(`/api/patients/search`);
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.message).toBe('Patient name query is required.');
+  });
+
+});
+
+
+afterAll(async () => {
+  await pool.end();
 });

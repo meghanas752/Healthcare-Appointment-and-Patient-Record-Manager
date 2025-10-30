@@ -1,0 +1,89 @@
+/* General Body Styles */
+body {
+    font-family: Arial, sans-serif; /* A clean, standard font */
+    background-color: #f0f2f5;      /* A very light grey background to make the white container pop */
+    color: #333;                     /* Dark grey text for readability */
+    margin: 0;
+    padding: 0;
+    display: flex;                  /* Use flexbox to easily manage layout */
+    flex-direction: column;         /* Stack children (container and footer) vertically */
+    min-height: 100vh;              /* Make the body at least the full height of the viewport */
+}
+
+/* The Main Content Container (our white card) */
+.container {
+    width: 90%;                     /* Responsive width */
+    max-width: 700px;               /* But don't let it get too wide on large screens */
+    margin: 40px auto;              /* Center the container horizontally with space on top/bottom */
+    padding: 30px;
+    background-color: #ffffff;      /* The white background */
+    border-radius: 8px;             /* Modern rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* A subtle shadow to lift it off the page */
+    flex-grow: 1;                   /* This is key: it tells the container to grow and push the footer down */
+}
+
+/* Styling for Form Elements */
+h1 {
+    text-align: center;
+    color: #192A56; /* A dark blue to match the theme */
+    margin-bottom: 20px;
+}
+
+label {
+    font-weight: bold;
+    display: block;                 /* Make labels take their own line */
+    margin-bottom: 5px;
+}
+
+/* This rule now styles ALL of your inputs, textareas, AND dropdowns */
+input[type="text"],
+input[type="tel"],
+textarea,
+select {
+    width: 100%;                    /* Make inputs fill the container width */
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;         /* Important: includes padding and border in the total width */
+    font-size: 16px;
+    background-color: white;        /* Ensures consistent background on all browsers */
+}
+
+textarea {
+    resize: vertical;               /* Allow users to resize the text areas vertically only */
+}
+
+button {
+    width: 100%;
+    padding: 15px;
+    background-color: #0056b3;      /* A strong, accessible blue */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;                /* Changes the mouse to a pointer on hover */
+    transition: background-color 0.3s ease; /* A smooth transition effect */
+}
+
+button:hover {
+    background-color: #004494;      /* A darker blue when you hover over the button */
+}
+
+#message {
+    text-align: center;
+    font-size: 1.1em;
+    font-weight: bold;
+    margin-top: 20px;
+}
+
+/* The Footer */
+footer {
+    width: 100%;
+    background-color: #192A56;      /* The navy blue you wanted */
+    color: white;
+    text-align: center;
+    padding: 20px 0;                /* Made it a little taller */
+    flex-shrink: 0;                 /* Prevents the footer from shrinking */
+}

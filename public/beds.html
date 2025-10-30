@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ward and Bed Allocation</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <main class="container">
+        <h1>Manage Ward and Bed Allocation (HMPRS-30)</h1>
+
+        <form id="allocationForm">
+            <label for="patientSelect">Select a Patient (Unassigned):</label><br>
+            <select id="patientSelect" name="patientId" required>
+                <option value="">Loading patients...</option>
+            </select><br><br>
+
+            <label for="bedSelect">Select an Available Bed:</label><br>
+            <select id="bedSelect" name="bedId" required>
+                <option value="">Loading beds...</option>
+            </select><br><br>
+
+            <button type="submit">Assign Patient to Bed</button>
+        </form>
+
+        <p id="message"></p>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 ClinicCloud - Hospital Management System</p>
+    </footer>
+
+    <script src="beds.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Create Digital Prescription</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="card">
+    <h1>Doctor: Create Prescription</h1>
+    <form id="rxForm">
+      <label>Patient ID <input name="patient_id" required /></label>
+      <label>Doctor ID  <input name="doctor_id" required /></label>
+      <label>Notes <textarea name="notes"></textarea></label>
+
+      <h3>Items</h3>
+      <div id="items">
+        <div class="item">
+          <input placeholder="Drug"   name="drug" />
+          <input placeholder="Dose"   name="dose" />
+          <input placeholder="Qty"    name="qty"  type="number" />
+        </div>
+      </div>
+      <button type="button" id="addItem">+ Add item</button>
+      <button type="submit">Save Prescription</button>
+    </form>
+    <p id="msg" class="msg"></p>
+  </main>
+  <script src="scripts/doctor-prescription.js"></script>
+</body>
+</html>

@@ -14,7 +14,7 @@ async function findByUsernameOrEmail(identifier) {
 }
 
 async function findById(id) {
-  const sql = `SELECT id, username, email, role, failed_attempts, locked_until, created_at FROM users WHERE id = ? LIMIT 1`;
+  const sql = `SELECT id, username, email, role, failed_attempts, lockout_until, created_at FROM users WHERE id = ? LIMIT 1`;
   const [rows] = await pool.execute(sql, [id]);
   return rows[0];
 }
@@ -27,12 +27,12 @@ async function incrementFailedAttempts(userId) {
 }
 
 async function resetFailedAttempts(userId) {
-  const sql = `UPDATE users SET failed_attempts = 0, locked_until = NULL WHERE id = ?`;
+  const sql = `UPDATE users SET failed_attempts = 0, lockout_until = NULL WHERE id = ?`;
   await pool.execute(sql, [userId]);
 }
 
 async function lockAccount(userId, unlockAtDate) {
-  const sql = `UPDATE users SET locked_until = ?, failed_attempts = 0 WHERE id = ?`;
+  const sql = `UPDATE users SET lockout_until = ?, failed_attempts = 0 WHERE id = ?`;
   await pool.execute(sql, [unlockAtDate, userId]);
 }
 

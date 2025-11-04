@@ -2,60 +2,60 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+<<<<<<< Updated upstream
 // Update this path to be correct relative to server.js
 // **THIS IS THE FIX:** Make sure BOTH functions are imported
 const { getPatientHistory, getPatientHistoryByName } = require('../backend/db.js'); 
 const { findByUsernameOrEmail } = require("C:/Users/megha/OneDrive/Desktop/sem5/software_engineering/project/src/server/models/userModel.js"); // ✅ import here
 const bcrypt = require("bcryptjs");
 const { createUser } = require("./models/userModel.js"); // ✅ import here
+=======
+
+// Import DB functions and connection
+const { pool, getPatientHistory, getPatientHistoryByName } = require('../backend/db.js'); 
+>>>>>>> Stashed changes
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors()); // Allows your frontend (in src/web) to call this backend
+app.use(cors());
 app.use(express.json());
 
-// --- YOUR ORIGINAL API ENDPOINT (keep this) ---
+// ---------------- EXISTING PATIENT ROUTES ----------------
+
 app.get('/api/patients/:id/history', async (req, res) => {
   try {
     const patientId = req.params.id;
     const history = await getPatientHistory(patientId);
-    
-    // Send back the history (it will be an empty array if no user)
     res.json(history);
-
   } catch (error) {
     console.error('Database error fetching patient history:', error);
     res.status(500).json({ message: 'Error fetching patient data.' });
   }
 });
 
-// --- YOUR NEW SEARCH API ENDPOINT ---
 app.get('/api/patients/search', async (req, res) => {
   try {
-    const patientName = req.query.name; // Gets name from URL like ?name=David%20Lee
-
+    const patientName = req.query.name;
     if (!patientName) {
       return res.status(400).json({ message: 'Patient name query is required.' });
     }
 
-    // **THIS IS THE FIX:** Call the function you imported
     const { patient, history } = await getPatientHistoryByName(patientName);
     
     if (!patient) {
-      return res.status(404).json({ message: 'Patient not found.' }); // 404 for Not Found
+      return res.status(404).json({ message: 'Patient not found.' });
     }
-    
-    // Send back both the patient info and their history
-    res.json({ patient, history });
 
+    res.json({ patient, history });
   } catch (error) {
     console.error('Database error during patient search:', error);
     res.status(500).json({ message: 'Error searching for patient.' });
   }
 });
 
+<<<<<<< Updated upstream
 app.post("/api/auth/login", async (req, res) => {
   console.log("🔹 Received POST /api/auth/login");
 
@@ -143,15 +143,69 @@ app.post("/api/auth/signup", async (req, res) => {
 
 
 
+=======
+// ---------------- APPOINTMENT ROUTES (MySQL) ----------------
+>>>>>>> Stashed changes
 
-// --- (Your team's other routes like /api/auth/login go here) ---
-// ...
+// ✅ Get all appointments
+app.get('/api/appointments', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM appointments');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching appointments:', error);
+    res.status(500).json({ message: 'Error fetching appointments' });
+  }
+});
 
-// Start Server (but not when testing)
+
+// ✅ Add a new appointment
+app.post('/api/appointments', async (req, res) => {
+  try {
+    const { patient_name, doctor_name, appointment_date, appointment_time } = req.body;
+
+    const [result] = await pool.query(
+      'INSERT INTO appointments (patient_name, doctor_name, appointment_date, appointment_time, status) VALUES (?, ?, ?, ?, ?)',
+      [patient_name, doctor_name, appointment_date, appointment_time, 'Booked']
+    );
+
+    const newAppointment = {
+      id: result.insertId,
+      patient_name,
+      doctor_name,
+      appointment_date,
+      appointment_time,
+      status: 'Booked'
+    };
+
+    res.status(201).json(newAppointment);
+  } catch (error) {
+    console.error('Error inserting appointment:', error);
+    res.status(500).json({ message: 'Error creating appointment' });
+  }
+});
+
+
+// ✅ Delete an appointment by ID
+app.delete('/api/appointments/:id', async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) return res.status(400).json({ message: 'Invalid ID' });
+
+  try {
+    await pool.query('DELETE FROM appointments WHERE id = ?', [id]);
+    res.json({ message: `Appointment ${id} deleted` });
+  } catch (error) {
+    console.error('Error deleting appointment:', error);
+    res.status(500).json({ message: 'Error deleting appointment.' });
+  }
+});
+
+// ---------------------------------------------------------
+
 if (process.env.NODE_ENV !== 'test') {
   app.listen(port, () => {
     console.log(`Server listening at http://localhost:${port}`);
   });
 }
 
-module.exports = app; // Export 'app' for our integration tests
+module.exports = app;

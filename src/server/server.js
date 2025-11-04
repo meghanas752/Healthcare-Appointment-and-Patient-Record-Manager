@@ -1,165 +1,190 @@
 // src/server/server.js
 require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
 
-/////////////////////////
-// Global crash handlers
-/////////////////////////
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('🔥 UNHANDLED REJECTION at promise:', promise, '\nreason:', reason);
-});
+// Import DB functions and connection
+const { pool, getPatientHistory, getPatientHistoryByName } = require('../backend/db.js'); 
 
-process.on('uncaughtException', (err) => {
-  console.error('🔥 UNCAUGHT EXCEPTION:', err);
-});
+// Import authentication and user model functions
+const { findByUsernameOrEmail } = require("./models/userModel.js");
+const bcrypt = require("bcryptjs");
+const { createUser } = require("./models/userModel.js");
 
-process.on('exit', (code) => {
-  console.log(`🧩 Process exiting normally with code ${code}`);
-});
-process.on('beforeExit', () => {
-  console.log('🧩 beforeExit triggered — event loop empty.');
-});
-
-
-/////////////////////////
-// Module loading logs
-/////////////////////////
-console.log('🔹 server.js starting...');
-
-try {
-  const express = require('express');
-  const cors = require('cors');
-  console.log('✅ express & cors modules loaded.');
-  
-  // create app early so we can add middleware even if DB fails
-  var app = express();
-  app.use(cors());
-  app.use(express.json());
-
-
-  console.log('✅ express app created.');
-} catch (err) {
-  console.error('❌ Failed to require express/cors or create app:', err);
-  // rethrow because we cannot run without Express
-  throw err;
-}
-
+const app = express();
 const port = process.env.PORT || 3000;
 
-/////////////////////////
-// Defensive DB import
-/////////////////////////
-let getPatientHistory = async (id) => {
-  console.warn('⚠️  getPatientHistory called but DB is not loaded — returning empty array.');
-  return [];
-};
-let getPatientHistoryByName = async (name) => {
-  console.warn('⚠️  getPatientHistoryByName called but DB is not loaded — returning null.');
-  return { patient: null, history: [] };
-};
-
-console.log('🔹 Attempting to load DB module at ../backend/db.js ...');
-try {
-  // wrap require in try/catch because require may throw synchronously
-  const db = require('../backend/db.js');
-
-  // Defensive checks: ensure the functions exist and are functions
-  if (db && typeof db.getPatientHistory === 'function' && typeof db.getPatientHistoryByName === 'function') {
-    getPatientHistory = db.getPatientHistory;
-    getPatientHistoryByName = db.getPatientHistoryByName;
-    console.log('✅ DB module loaded and functions assigned.');
-  } else {
-    console.error('❌ DB module loaded but expected functions are missing or not functions. DB module export:', db);
-  }
-} catch (err) {
-  // Log full stack + message — this is probably where your process is failing
-  console.error('❌ Error while requiring ../backend/db.js — this likely caused the process to exit before listen():', err && err.stack ? err.stack : err);
-  console.error('👉 Possible causes: synchronous throw in db.js, top-level await (unsupported), pool.connect() throwing, or process.exit() in db.js.');
-  // do NOT rethrow — we keep server up with fallback stubs so we can debug
-}
-
-/////////////////////////
 // Middleware
-/////////////////////////
-// app.use(cors());
+app.use(cors());
+app.use(express.json());
 
-app.use((req, res, next) => {
-  console.log(`➡️ ${req.method} ${req.url} — query: ${JSON.stringify(req.query)} body: ${JSON.stringify(req.body)}`);
-  next();
-});
+// ---------------- EXISTING PATIENT ROUTES ----------------
 
-/////////////////////////
-// Routes
-/////////////////////////
 app.get('/api/patients/:id/history', async (req, res) => {
-  console.log('🔹 GET /api/patients/:id/history handler entered');
   try {
     const patientId = req.params.id;
-    console.log('  -> patientId:', patientId);
     const history = await getPatientHistory(patientId);
-    console.log('  -> history retrieved, length:', Array.isArray(history) ? history.length : typeof history);
-    res.json(history || []);
+    res.json(history);
   } catch (error) {
-    console.error('❌ Database error fetching patient history:', error && error.stack ? error.stack : error);
+    console.error('Database error fetching patient history:', error);
     res.status(500).json({ message: 'Error fetching patient data.' });
   }
 });
 
 app.get('/api/patients/search', async (req, res) => {
-  console.log('🔹 GET /api/patients/search handler entered');
   try {
     const patientName = req.query.name;
-    console.log('  -> query.name:', patientName);
-
     if (!patientName) {
-      console.warn('  -> missing name query param');
       return res.status(400).json({ message: 'Patient name query is required.' });
     }
 
-    const result = await getPatientHistoryByName(patientName);
-    console.log('  -> getPatientHistoryByName returned:', result && typeof result === 'object' ? Object.keys(result) : typeof result);
-
-    // support both shapes: { patient, history } or null
-    const patient = result && result.patient ? result.patient : null;
-    const history = result && result.history ? result.history : [];
-
+    const { patient, history } = await getPatientHistoryByName(patientName);
+    
     if (!patient) {
-      console.warn('  -> patient not found for name:', patientName);
       return res.status(404).json({ message: 'Patient not found.' });
     }
 
     res.json({ patient, history });
   } catch (error) {
-    console.error('❌ Database error during patient search:', error && error.stack ? error.stack : error);
+    console.error('Database error during patient search:', error);
     res.status(500).json({ message: 'Error searching for patient.' });
   }
 });
 
-/////////////////////////
-// Generic error handler middleware
-/////////////////////////
-app.use((err, req, res, next) => {
-  console.error('🔥 Express error handler caught an error:', err && err.stack ? err.stack : err);
-  res.status(500).json({ message: 'Internal server error' });
+// ---------------- AUTH ROUTES ----------------
+
+app.post("/api/auth/login", async (req, res) => {
+  console.log("🔹 Received POST /api/auth/login");
+
+  const { identifier, password } = req.body;
+
+  if (!identifier || !password) {
+    return res
+      .status(400)
+      .json({ status: "error", message: "Username/email and password are required." });
+  }
+
+  try {
+    const user = await findByUsernameOrEmail(identifier);
+    if (!user) {
+      return res
+        .status(401)
+        .json({ status: "fail", message: "Invalid username or password." });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password_hash);
+    if (!isMatch) {
+      return res
+        .status(401)
+        .json({ status: "fail", message: "Invalid username or password." });
+    }
+
+    return res.json({
+      status: "success",
+      message: "Login successful!",
+      user: { username: user.username, email: user.email },
+    });
+  } catch (err) {
+    console.error("❌ Error during login:", err);
+    return res
+      .status(500)
+      .json({ status: "error", message: "Internal Server Error" });
+  }
 });
 
-/////////////////////////
-// Start server
-/////////////////////////
-try {
-  if (process.env.NODE_ENV !== 'test') {
-    const server = app.listen(port, () => {
-      console.log(`✅ Server listening at http://localhost:${port}`);
-    });
+app.post("/api/auth/signup", async (req, res) => {
+  console.log("🔹 Received POST /api/auth/signup");
 
-    // log when server closes
-    server.on('close', () => {
-      console.warn('⚠️  HTTP server closed.');
-    });
-  } else {
-    console.log('ℹ️  NODE_ENV is "test" — server NOT started (exports app for tests).');
+  const { username, email, password, role } = req.body;
+
+  if (!username || !email || !password) {
+    return res
+      .status(400)
+      .json({ status: "error", message: "All fields are required." });
   }
-} catch (err) {
-  console.error('❌ Failed to start server (listen threw):', err && err.stack ? err.stack : err);
+
+  try {
+    const existingUser = await findByUsernameOrEmail(username);
+    const existingEmail = await findByUsernameOrEmail(email);
+    if (existingUser || existingEmail) {
+      return res
+        .status(409)
+        .json({ status: "fail", message: "Username or email already exists." });
+    }
+
+    const password_hash = await bcrypt.hash(password, 10);
+    const newUser = await createUser({ username, email, password_hash, role });
+
+    res.status(201).json({
+      status: "success",
+      message: "User registered successfully!",
+      user: newUser,
+    });
+  } catch (err) {
+    console.error("❌ Error during signup:", err);
+    res.status(500).json({ status: "error", message: "Internal Server Error" });
+  }
+});
+
+// ---------------- APPOINTMENT ROUTES (MySQL) ----------------
+
+// ✅ Get all appointments
+app.get('/api/appointments', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM appointments');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching appointments:', error);
+    res.status(500).json({ message: 'Error fetching appointments' });
+  }
+});
+
+// ✅ Add a new appointment
+app.post('/api/appointments', async (req, res) => {
+  try {
+    const { patient_name, doctor_name, appointment_date, appointment_time } = req.body;
+
+    const [result] = await pool.query(
+      'INSERT INTO appointments (patient_name, doctor_name, appointment_date, appointment_time, status) VALUES (?, ?, ?, ?, ?)',
+      [patient_name, doctor_name, appointment_date, appointment_time, 'Booked']
+    );
+
+    const newAppointment = {
+      id: result.insertId,
+      patient_name,
+      doctor_name,
+      appointment_date,
+      appointment_time,
+      status: 'Booked'
+    };
+
+    res.status(201).json(newAppointment);
+  } catch (error) {
+    console.error('Error inserting appointment:', error);
+    res.status(500).json({ message: 'Error creating appointment' });
+  }
+});
+
+// ✅ Delete an appointment by ID
+app.delete('/api/appointments/:id', async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) return res.status(400).json({ message: 'Invalid ID' });
+
+  try {
+    await pool.query('DELETE FROM appointments WHERE id = ?', [id]);
+    res.json({ message: `Appointment ${id} deleted` });
+  } catch (error) {
+    console.error('Error deleting appointment:', error);
+    res.status(500).json({ message: 'Error deleting appointment.' });
+  }
+});
+
+// ---------------------------------------------------------
+
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(port, () => {
+    console.log(`Server listening at http://localhost:${port}`);
+  });
 }
 
 module.exports = app;

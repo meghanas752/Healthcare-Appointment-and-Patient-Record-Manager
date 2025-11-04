@@ -1,0 +1,209 @@
+/* 🌸 Global Styles */
+body {
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #fdf2f2;
+  color: #333;
+}
+
+/* 🌼 Header & Navigation */
+header {
+  background: #e74c3c;
+  color: white;
+  padding: 15px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+header h1 {
+  font-size: 24px;
+  margin: 0;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  margin: 0 10px;
+  font-weight: 500;
+}
+
+nav a.active,
+nav a:hover {
+  text-decoration: underline;
+}
+
+.logout {
+  color: #ffebeb;
+  font-weight: bold;
+}
+
+/* 🩺 Main Layout */
+main {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  padding: 25px;
+  gap: 20px;
+}
+
+/* 💖 Form Section */
+.form-section {
+  background: white;
+  padding: 25px 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  flex: 1 1 350px;
+  max-width: 400px;
+}
+
+.form-section h2 {
+  text-align: center;
+  color: #c0392b;
+  border-bottom: 2px solid #e74c3c;
+  padding-bottom: 5px;
+  margin-bottom: 20px;
+}
+
+/* 🎯 Form Inputs */
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+  transition: border-color 0.3s ease;
+}
+
+input:focus {
+  border-color: #e74c3c;
+  outline: none;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+button:hover {
+  background: #c0392b;
+}
+
+/* ✅ Success/Error Message */
+#message {
+  text-align: center;
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+/* 📋 Table Section */
+.list-section {
+  background: white;
+  padding: 25px 30px;
+  border-radius: 12px;
+  flex: 2 1 600px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.list-section h2 {
+  color: #c0392b;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  text-align: center;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background-color: #e74c3c;
+  color: white;
+}
+
+tr:nth-child(even) {
+  background-color: #f8f8f8;
+}
+
+tr:hover {
+  background-color: #fbeaea;
+}
+
+/* ⚙️ Action Buttons */
+.action-btn {
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  border: none;
+  font-size: 14px;
+}
+
+.edit {
+  background-color: #f39c12;
+  color: white;
+}
+
+.delete {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.edit:hover {
+  background-color: #d68910;
+}
+
+.delete:hover {
+  background-color: #c0392b;
+}
+
+/* 📱 Responsive */
+@media (max-width: 768px) {
+  main {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .form-section, .list-section {
+    width: 90%;
+  }
+
+  header h1 {
+    font-size: 20px;
+  }
+}
+
+/* 💕 Footer */
+footer {
+  text-align: center;
+  background: #e74c3c;
+  color: white;
+  padding: 12px;
+  margin-top: 20px;
+  font-size: 14px;
+}

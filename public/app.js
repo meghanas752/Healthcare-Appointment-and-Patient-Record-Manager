@@ -1,5 +1,9 @@
 // public/app.js
 
+//mai
+import inventoryRoutes from "./routes/inventory.js";
+app.use("/api/inventory", inventoryRoutes);
+
 document.getElementById('registrationForm').addEventListener('submit', async function(event) {
     event.preventDefault();
 
@@ -48,3 +52,4 @@ document.getElementById('registrationForm').addEventListener('submit', async fun
         messageElement.style.color = 'red';
     }
 });
+

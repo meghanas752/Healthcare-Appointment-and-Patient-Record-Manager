@@ -4,7 +4,13 @@ const express = require('express');
 const cors = require('cors');
 
 // Import DB functions and connection
-const { pool, getPatientHistory, getPatientHistoryByName } = require('../backend/db.js'); 
+// ** STEP 1: ADD createPrescription to the import list **
+const { 
+  pool, 
+  getPatientHistory, 
+  getPatientHistoryByName,
+  createPrescription // <-- ADD THIS
+} = require('../backend/db.js'); 
 
 // Import authentication and user model functions
 const { findByUsernameOrEmail } = require("./models/userModel.js");
@@ -176,6 +182,30 @@ app.delete('/api/appointments/:id', async (req, res) => {
   } catch (error) {
     console.error('Error deleting appointment:', error);
     res.status(500).json({ message: 'Error deleting appointment.' });
+  }
+});
+
+// ** STEP 2: ADD THE NEW PRESCRIPTION ROUTE **
+// ---------------- PRESCRIPTION ROUTES ----------------
+
+app.post('/api/prescriptions', async (req, res) => {
+  try {
+    // Note: We don't need doctorId because it's not in your SQL table
+    const { patientId, details } = req.body;
+
+    if (!patientId || !details) {
+      return res.status(400).json({ message: 'patientId and details are required.' });
+    }
+    
+    // Call your new DB function
+    const newPrescription = await createPrescription(patientId, details);
+    
+    // 201 Created
+    res.status(201).json(newPrescription); 
+
+  } catch (error) {
+    console.error('Database error creating prescription:', error);
+    res.status(500).json({ message: 'Error creating prescription.' });
   }
 });
 

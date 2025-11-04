@@ -250,3 +250,77 @@ body {
   min-width: 120px;
   padding-left: 20px;
 }
+
+
+/* --- STYLES FOR NEW PRESCRIPTION FORM --- */
+
+#prescription-section {
+  margin-top: 30px;
+}
+
+#prescription-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.form-group textarea {
+  padding: 12px 15px;
+  font-size: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  resize: vertical;
+}
+
+.submit-button {
+  padding: 15px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+  background-color: #28a745; /* Green for 'create' */
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  align-self: flex-start; /* Don't stretch the button */
+}
+
+.submit-button:hover {
+  background-color: #218838;
+}
+
+/* For showing success/error messages */
+#prescription-message {
+  padding: 15px;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+#prescription-message.success {
+  background-color: #e6f7ec;
+  color: #218838;
+}
+
+#prescription-message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.hidden {
+  display: none;
+}

@@ -2,6 +2,7 @@
 
 const express = require('express');
 const router = express.Router();
+// This path says: "Go UP ONE FOLDER from here, then find db-config.js"
 const db = require('../db-config');
 
 router.post('/register', (req, res) => {
@@ -37,4 +38,18 @@ router.post('/register', (req, res) => {
     });
 });
 
-module.exports = router;
+// NEW API Endpoint: GET all patients who are not assigned to a bed
+// URL: GET /api/patients/unassigned
+router.get('/unassigned', (req, res) => {
+    const sql = 'SELECT id, name FROM patients WHERE bed_id IS NULL';
+
+    db.query(sql, (err, patients) => {
+        if (err) {
+            console.error('Error fetching unassigned patients:', err);
+            return res.status(500).json({ error: 'Database error occurred.' });
+        }
+        res.json(patients); // Send the list of patients back
+    });
+});
+
+module.exports = router; // This should now be at the very bottom

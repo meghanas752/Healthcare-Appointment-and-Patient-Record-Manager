@@ -1,0 +1,6 @@
+- Doctor can create a digital prescription linked to a patient.
+- Minimal fields: patient_id, doctor_id, notes, items (JSON), status.
+- API:
+  - POST /api/prescriptions → create (returns id)
+  - GET /api/prescriptions/:id → fetch
+- Pharmacy will consume later (out of scope here).

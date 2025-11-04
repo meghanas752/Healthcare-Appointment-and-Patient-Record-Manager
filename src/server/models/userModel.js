@@ -1,5 +1,6 @@
 // src/server/models/userModel.js
-const pool = require('../utils/db');
+//const pool = require('../utils/db');
+const { pool } = require('../../backend/db.js');
 
 async function createUser({ username, email, password_hash, role = 'patient' }) {
   const sql = `INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)`;

@@ -7,9 +7,18 @@ const cors = require('cors');
 const { pool, getPatientHistory, getPatientHistoryByName } = require('../backend/db.js'); 
 
 // Import authentication and user model functions
-const { findByUsernameOrEmail } = require("./models/userModel.js");
+//const { findByUsernameOrEmail } = require("./models/userModel.js");
 const bcrypt = require("bcryptjs");
-const { createUser } = require("./models/userModel.js");
+//const { createUser } = require("./models/userModel.js");
+
+// ✅ User model helpers Mai
+const {
+  findByUsernameOrEmail,
+  createUser,
+  incrementFailedAttempts,
+  resetFailedAttempts,
+  lockAccount
+} = require('./models/userModel.js');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -17,6 +26,11 @@ const port = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+//Mai
+const { isLocked, MAX_ATTEMPTS } = require('./services/lockout');
+
+const bcrypt = require('bcryptjs');
 
 // ---------------- EXISTING PATIENT ROUTES ----------------
 
@@ -53,76 +67,62 @@ app.get('/api/patients/search', async (req, res) => {
 
 // ---------------- AUTH ROUTES ----------------
 
-app.post("/api/auth/login", async (req, res) => {
-  console.log("🔹 Received POST /api/auth/login");
+app.post('/api/auth/login', async (req, res) => {
+  console.log('🔹 POST /api/auth/login');
 
   const { identifier, password } = req.body;
-
   if (!identifier || !password) {
-    return res
-      .status(400)
-      .json({ status: "error", message: "Username/email and password are required." });
+    return res.status(400).json({ ok:false, code:'BAD_REQUEST', message:'Username/email and password are required.' });
   }
 
   try {
     const user = await findByUsernameOrEmail(identifier);
     if (!user) {
-      return res
-        .status(401)
-        .json({ status: "fail", message: "Invalid username or password." });
+      // do not reveal existence
+      return res.status(401).json({ ok:false, code:'BAD_CREDENTIALS', message:'Invalid username or password.' });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password_hash);
-    if (!isMatch) {
-      return res
-        .status(401)
-        .json({ status: "fail", message: "Invalid username or password." });
+    // 1) If currently locked, block
+    const lock = isLocked(user);
+    if (lock.locked) {
+      return res.status(423).json({
+        ok:false, code:'LOCKED', message:'Account locked. Try again later.', unlockAt: lock.unlockAt
+      });
     }
 
+    // 2) Check password
+    const ok = await bcrypt.compare(password, user.password_hash);
+    if (!ok) {
+      // bump attempts in DB and read new count
+      const attempts = await incrementFailedAttempts(user.id);
+
+      if (attempts >= MAX_ATTEMPTS) {
+        const unlockAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+        await lockAccount(user.id, unlockAt.toISOString());
+        return res.status(423).json({
+          ok:false, code:'LOCKED',
+          message:'Too many attempts. Account locked for 15 minutes.',
+          unlockAt
+        });
+      }
+
+      return res.status(401).json({
+        ok:false, code:'BAD_CREDENTIALS',
+        message:'Invalid username or password.',
+        attemptsLeft: Math.max(0, MAX_ATTEMPTS - attempts)
+      });
+    }
+
+    // 3) Success → reset counters
+    await resetFailedAttempts(user.id);
     return res.json({
-      status: "success",
-      message: "Login successful!",
-      user: { username: user.username, email: user.email },
+      ok:true, message:'Login successful!',
+      user: { username: user.username, email: user.email }
     });
+
   } catch (err) {
-    console.error("❌ Error during login:", err);
-    return res
-      .status(500)
-      .json({ status: "error", message: "Internal Server Error" });
-  }
-});
-
-app.post("/api/auth/signup", async (req, res) => {
-  console.log("🔹 Received POST /api/auth/signup");
-
-  const { username, email, password, role } = req.body;
-
-  if (!username || !email || !password) {
-    return res
-      .status(400)
-      .json({ status: "error", message: "All fields are required." });
-  }
-
-  try {
-    const existingUser = await findByUsernameOrEmail(username);
-    const existingEmail = await findByUsernameOrEmail(email);
-    if (existingUser || existingEmail) {
-      return res
-        .status(409)
-        .json({ status: "fail", message: "Username or email already exists." });
-    }
-
-    const password_hash = await bcrypt.hash(password, 10);
-    const newUser = await createUser({ username, email, password_hash, role });
-
-    res.status(201).json({
-      status: "success",
-      message: "User registered successfully!",
-      user: newUser,
-    });
-  } catch (err) {
-    console.error("❌ Error during signup:", err);
-    res.status(500).json({ status: "error", message: "Internal Server Error" });
+    console.error('❌ Error during login:', err);
+    return res.status(500).json({ ok:false, code:'SERVER_ERROR', message:'Internal Server Error' });
   }
 });
 

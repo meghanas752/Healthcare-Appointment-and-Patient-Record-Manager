@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Patient Registration</title>
+    <link rel="stylesheet" href="style.css"> </head>
+<body>
+
+    <main class="container">
+        <h1>New Patient Registration (HMPRS-18)</h1>
+        
+        <form id="registrationForm">
+            <label for="firstName">First Name:</label><br>
+            <input type="text" id="firstName" name="firstName" required><br><br>
+
+            <label for="lastName">Last Name:</label><br>
+            <input type="text" id="lastName" name="lastName" required><br><br>
+
+            <label for="phone">Phone Number:</label><br>
+            <input type="tel" id="phone" name="phone"><br><br>
+
+            <label for="medicalHistory">Previous Medical History:</label><br>
+            <textarea id="medicalHistory" name="medicalHistory" rows="4"></textarea><br><br>
+
+            <label for="currentMedications">Current Medications:</label><br>
+            <textarea id="currentMedications" name="currentMedications" rows="4"></textarea><br><br>
+
+            <button type="submit">Register Patient</button>
+        </form>
+
+        <p id="message"></p>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 ClinicCloud - Hospital Management System</p>
+    </footer>
+
+    <script src="app.js"></script>
+
+</body>
+</html>

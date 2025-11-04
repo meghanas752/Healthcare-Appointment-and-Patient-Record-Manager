@@ -1,11 +1,10 @@
 // routes/patients.js
 
-// routes/patients.js
-
 const express = require('express');
 const router = express.Router();
 // This path says: "Go UP ONE FOLDER from here, then find db-config.js"
 const db = require('../db-config');
+
 router.post('/register', (req, res) => {
     // 1. Get ALL the data from the incoming request, including the new fields.
     const { firstName, lastName, phone, medicalHistory, currentMedications } = req.body;

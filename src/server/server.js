@@ -2,18 +2,14 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-<<<<<<< Updated upstream
-// Update this path to be correct relative to server.js
-// **THIS IS THE FIX:** Make sure BOTH functions are imported
-const { getPatientHistory, getPatientHistoryByName } = require('../backend/db.js'); 
-const { findByUsernameOrEmail } = require("C:/Users/megha/OneDrive/Desktop/sem5/software_engineering/project/src/server/models/userModel.js"); // ✅ import here
-const bcrypt = require("bcryptjs");
-const { createUser } = require("./models/userModel.js"); // ✅ import here
-=======
 
 // Import DB functions and connection
 const { pool, getPatientHistory, getPatientHistoryByName } = require('../backend/db.js'); 
->>>>>>> Stashed changes
+
+// Import authentication and user model functions
+const { findByUsernameOrEmail } = require("./models/userModel.js");
+const bcrypt = require("bcryptjs");
+const { createUser } = require("./models/userModel.js");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -55,13 +51,13 @@ app.get('/api/patients/search', async (req, res) => {
   }
 });
 
-<<<<<<< Updated upstream
+// ---------------- AUTH ROUTES ----------------
+
 app.post("/api/auth/login", async (req, res) => {
   console.log("🔹 Received POST /api/auth/login");
 
   const { identifier, password } = req.body;
 
-  // Check if both fields are provided
   if (!identifier || !password) {
     return res
       .status(400)
@@ -69,25 +65,20 @@ app.post("/api/auth/login", async (req, res) => {
   }
 
   try {
-    // 1️⃣ Find user by username or email
     const user = await findByUsernameOrEmail(identifier);
     if (!user) {
-      // User not found
       return res
         .status(401)
         .json({ status: "fail", message: "Invalid username or password." });
     }
 
-    // 2️⃣ Verify password using bcrypt
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
-      // Wrong password
       return res
         .status(401)
         .json({ status: "fail", message: "Invalid username or password." });
     }
 
-    // 3️⃣ Login successful
     return res.json({
       status: "success",
       message: "Login successful!",
@@ -106,7 +97,6 @@ app.post("/api/auth/signup", async (req, res) => {
 
   const { username, email, password, role } = req.body;
 
-  // 1️⃣ Validate inputs
   if (!username || !email || !password) {
     return res
       .status(400)
@@ -114,7 +104,6 @@ app.post("/api/auth/signup", async (req, res) => {
   }
 
   try {
-    // 2️⃣ Check if user already exists
     const existingUser = await findByUsernameOrEmail(username);
     const existingEmail = await findByUsernameOrEmail(email);
     if (existingUser || existingEmail) {
@@ -123,13 +112,9 @@ app.post("/api/auth/signup", async (req, res) => {
         .json({ status: "fail", message: "Username or email already exists." });
     }
 
-    // 3️⃣ Hash password
     const password_hash = await bcrypt.hash(password, 10);
-
-    // 4️⃣ Create new user
     const newUser = await createUser({ username, email, password_hash, role });
 
-    // 5️⃣ Return success message
     res.status(201).json({
       status: "success",
       message: "User registered successfully!",
@@ -141,11 +126,7 @@ app.post("/api/auth/signup", async (req, res) => {
   }
 });
 
-
-
-=======
 // ---------------- APPOINTMENT ROUTES (MySQL) ----------------
->>>>>>> Stashed changes
 
 // ✅ Get all appointments
 app.get('/api/appointments', async (req, res) => {
@@ -157,7 +138,6 @@ app.get('/api/appointments', async (req, res) => {
     res.status(500).json({ message: 'Error fetching appointments' });
   }
 });
-
 
 // ✅ Add a new appointment
 app.post('/api/appointments', async (req, res) => {
@@ -184,7 +164,6 @@ app.post('/api/appointments', async (req, res) => {
     res.status(500).json({ message: 'Error creating appointment' });
   }
 });
-
 
 // ✅ Delete an appointment by ID
 app.delete('/api/appointments/:id', async (req, res) => {

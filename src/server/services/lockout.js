@@ -3,7 +3,7 @@ const LOCK_MINUTES = 15;
 const MAX_ATTEMPTS = 5;
 
 function isLocked(user, now = new Date()) {
-  if (!user.lockout_until) return { locked: false };
+  if (!user || !user.lockout_until) return { locked: false };
   const unlockAt = new Date(user.lockout_until);
   return { locked: now < unlockAt, unlockAt };
 }

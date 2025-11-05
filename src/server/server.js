@@ -30,7 +30,6 @@ app.use(express.json());
 //Mai
 const { isLocked, MAX_ATTEMPTS } = require('./services/lockout');
 
-const bcrypt = require('bcryptjs');
 
 // ---------------- EXISTING PATIENT ROUTES ----------------
 

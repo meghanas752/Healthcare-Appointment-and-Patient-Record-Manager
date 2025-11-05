@@ -21,26 +21,22 @@ async function findById(id) {
 }
 
 async function incrementFailedAttempts(userId) {
-  const sql = `UPDATE users SET failed_attempts = failed_attempts + 1 WHERE id = ?`;
-  await pool.execute(sql, [userId]);
+  await pool.execute(`UPDATE users SET failed_attempts = failed_attempts + 1 WHERE id = ?`, [userId]);
   const [rows] = await pool.execute(`SELECT failed_attempts FROM users WHERE id = ?`, [userId]);
-  return rows[0] && rows[0].failed_attempts;
+  return rows[0] ? rows[0].failed_attempts : 0;
 }
 
 async function resetFailedAttempts(userId) {
-  const sql = `UPDATE users SET failed_attempts = 0, lockout_until = NULL WHERE id = ?`;
-  await pool.execute(sql, [userId]);
+  await pool.execute(`UPDATE users SET failed_attempts = 0, lockout_until = NULL WHERE id = ?`, [userId]);
 }
 
 async function lockAccount(userId, unlockAtDate) {
-  const sql = `UPDATE users SET lockout_until = ?, failed_attempts = 0 WHERE id = ?`;
-  await pool.execute(sql, [unlockAtDate, userId]);
+  await pool.execute(`UPDATE users SET lockout_until = ?, failed_attempts = 0 WHERE id = ?`, [unlockAtDate, userId]);
 }
 
 module.exports = {
   createUser,
   findByUsernameOrEmail,
-  findById,
   incrementFailedAttempts,
   resetFailedAttempts,
   lockAccount

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pharmacist Inventory</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="card">
+    <h1>Inventory</h1>
+
+    <section>
+      <button id="refresh">Refresh</button>
+      <table id="tbl" border="1" cellpadding="6">
+        <thead><tr><th>Code</th><th>Name</th><th>Stock</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section>
+      <h3>Dispense</h3>
+      <form id="dispenseForm">
+        <input name="drug_code" placeholder="Drug code" required />
+        <input name="qty" type="number" placeholder="Qty" required />
+        <input name="prescription_id" type="number" placeholder="Prescription ID (optional)" />
+        <button type="submit">Dispense</button>
+      </form>
+    </section>
+
+    <section>
+      <h3>Restock</h3>
+      <form id="restockForm">
+        <input name="drug_code" placeholder="Drug code" required />
+        <input name="qty" type="number" placeholder="Qty" required />
+        <button type="submit">Add Stock</button>
+      </form>
+    </section>
+
+    <p id="msg" class="msg"></p>
+  </main>
+  <script src="scripts/pharmacist-inventory.js"></script>
+</body>
+</html>

@@ -36,3 +36,4 @@ document.getElementById('restockForm').onsubmit = async (e)=>{
 };
 
 load();
+//end

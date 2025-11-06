@@ -7,69 +7,72 @@
   <link rel="stylesheet" href="appointments.css" />
 </head>
 <body>
-  <header>
-    <h1>Hospital Management System</h1>
-    <nav>
-      <a href="dashboard.html">🏠 Dashboard</a>
-      <a href="appointments.html" class="active">📅 Appointments</a>
-      <a href="patients.html">👩‍⚕️ Patients</a>
-      <a href="logout.html" class="logout">🚪 Logout</a>
-    </nav>
-  </header>
+  <div class="sidebar">
+    <h2>HMPRS</h2>
+    <a href="doctor-patient-profile.html">🔍 Search Patient</a>
+    <a href="dashboard.html">📊 Dashboard</a>
+    <a href="appointments.html" class="active">📅 My Appointments</a>
+    <div class="bottom">
+      <p>Signed in as<br><strong>Dr. Megha</strong></p>
+      <a href="logout.html" class="logout">Logout</a>
+    </div>
+  </div>
 
-  <main>
-    <section class="form-section">
-      <h2>Book Appointment</h2>
-      <form id="appointmentForm">
-        <div class="form-group">
-          <label for="patient_name">Patient Name</label>
-          <input type="text" id="patient_name" placeholder="Enter patient name" required>
-        </div>
+  <div class="main-content">
+    <header>
+      <h1>Manage Appointments</h1>
+    </header>
 
-        <div class="form-group">
-          <label for="doctor_name">Doctor Name</label>
-          <input type="text" id="doctor_name" placeholder="Enter doctor name" required>
-        </div>
+    <section class="appointment-container">
+      <div class="form-section">
+        <h2>Book Appointment</h2>
+        <form id="appointmentForm">
+          <div class="form-group">
+            <label for="patient_name">Patient Name</label>
+            <input type="text" id="patient_name" placeholder="Enter patient name" required>
+          </div>
 
-        <div class="form-group">
-          <label for="appointment_date">Date</label>
-          <input type="date" id="appointment_date" required>
-        </div>
+          <div class="form-group">
+            <label for="doctor_name">Doctor Name</label>
+            <input type="text" id="doctor_name" placeholder="Enter doctor name" required>
+          </div>
 
-        <div class="form-group">
-          <label for="appointment_time">Time</label>
-          <input type="time" id="appointment_time" required>
-        </div>
+          <div class="form-group">
+            <label for="appointment_date">Date</label>
+            <input type="date" id="appointment_date" required>
+          </div>
 
-        <button type="submit">Book Appointment</button>
-        <p id="message"></p>
-      </form>
+          <div class="form-group">
+            <label for="appointment_time">Time</label>
+            <input type="time" id="appointment_time" required>
+          </div>
+
+          <button type="submit" class="btn-primary">Book Appointment</button>
+          <p id="message"></p>
+        </form>
+      </div>
+
+      <div class="list-section">
+        <h2>Appointments List</h2>
+        <table id="appointmentsTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Patient</th>
+              <th>Doctor</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Filled dynamically -->
+          </tbody>
+        </table>
+      </div>
     </section>
-
-    <section class="list-section">
-      <h2>Appointments List</h2>
-      <table id="appointmentsTable">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Patient</th>
-            <th>Doctor</th>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- dynamically filled by appointments.js -->
-        </tbody>
-      </table>
-    </section>
-  </main>
-
-  <footer>
-    <p>© 2025 Hospital Management System | Developed by Meghana 💖</p>
-  </footer>
+  </div>
 
   <script src="appointments.js"></script>
 </body>

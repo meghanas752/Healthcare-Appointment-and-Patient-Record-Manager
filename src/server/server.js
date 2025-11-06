@@ -2,7 +2,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-
+const path = require('path');
 // Import DB functions and connection
 // ** STEP 1: ADD createPrescription to the import list **
 const { 
@@ -23,6 +23,11 @@ const port = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// --- NEW STATIC FILE SERVING ---
+// This tells Express to serve everything from the 'src' folder
+app.use(express.static(path.join(__dirname, '..'))); // Goes up one level to 'src'
+// --- END OF NEW STATIC FILE SERVING ---
 
 // ---------------- EXISTING PATIENT ROUTES ----------------
 
@@ -85,11 +90,17 @@ app.post("/api/auth/login", async (req, res) => {
         .json({ status: "fail", message: "Invalid username or password." });
     }
 
+    // ... (inside the login route)
     return res.json({
       status: "success",
       message: "Login successful!",
-      user: { username: user.username, email: user.email },
+      user: { 
+        username: user.username, 
+        email: user.email, 
+        role: user.role  // <-- ADD THIS LINE
+      },
     });
+// ...
   } catch (err) {
     console.error("❌ Error during login:", err);
     return res

@@ -1,9 +1,9 @@
 // src/backend/db.js
-// This file handles all database connections and queries
+// This file handles ALL database connections and queries
 
 require('dotenv').config({ path: __dirname + '/../server/.env' }); 
 const mysql = require('mysql2/promise');
-const bcrypt = require('bcrypt'); // This is needed for registerPatient
+const bcrypt = require('bcryptjs'); // Use bcryptjs to match your teammate's code
 const saltRounds = 10;
 
 const pool = mysql.createPool({
@@ -20,6 +20,7 @@ const pool = mysql.createPool({
  * Fetches all diagnoses, allergies, and prescriptions for a single patient
  */
 async function getPatientHistory(patientId) {
+  // This queries the 'patients' table (ID 1-4)
   const [diagnoses] = await pool.query(
     'SELECT details, date, "Diagnosis" as type FROM diagnoses WHERE patientId = ?',
     [patientId]
@@ -45,6 +46,7 @@ async function getPatientHistory(patientId) {
  * Searches for a patient by exact name
  */
 async function getPatientHistoryByName(patientName) {
+  // NOTE: This queries the 'patients' table (ID 1-4)
   const [patientRows] = await pool.query(
     'SELECT id FROM patients WHERE name = ? LIMIT 1',
     [patientName]
@@ -72,33 +74,54 @@ async function createPrescription(patientId, details) {
 }
 
 
-// ***** THIS IS THE MISSING FUNCTION *****
+// ***** NEW FUNCTION FOR LOGIN *****
 /**
- * Creates a new patient in the database.
- * Hashes the password with bcrypt.
+ * Finds a user by their username OR email.
+ * This queries the 'users' table.
  */
-async function registerPatient(patientData) {
-  const { name, email, password, phone, dob } = patientData;
-
-  const [existing] = await pool.query(
-    'SELECT id FROM patients WHERE email = ?',
-    [email]
+async function findUserByEmailOrUsername(identifier) {
+  const [rows] = await pool.query(
+    'SELECT * FROM users WHERE username = ? OR email = ? LIMIT 1',
+    [identifier, identifier]
   );
-
-  if (existing.length > 0) {
-    throw new Error('Email already in use.'); 
-  }
-
-  const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-  const [result] = await pool.query(
-    'INSERT INTO patients (name, email, password, phone, dob) VALUES (?, ?, ?, ?, ?)',
-    [name, email, hashedPassword, phone, dob]
-  );
-
-  return { id: result.insertId, name: name, email: email };
+  return rows[0]; // Will be undefined if not found
 }
-// ***** END OF MISSING FUNCTION *****
+
+// ***** NEW FUNCTION FOR SIGNUP *****
+/**
+ * Creates a new user in the 'users' table.
+ */
+async function createUser(userData) {
+  const { username, email, password_hash, role } = userData;
+  
+  const [result] = await pool.query(
+    'INSERT INTO users (username, email, password_hash, role, failed_attempts, is_locked) VALUES (?, ?, ?, ?, 0, 0)',
+    [username, email, password_hash, role]
+  );
+
+  return { id: result.insertId, username: username, email: email, role: role };
+}
+
+// ***** NEW FUNCTIONS FOR LOCKOUT (Your Task) *****
+/**
+ * Increments the failed login count for a user.
+ */
+async function incrementFailedAttempts(userId) {
+  await pool.query(
+    'UPDATE users SET failed_attempts = failed_attempts + 1, last_failed_at = NOW() WHERE id = ?',
+    [userId]
+  );
+}
+
+/**
+ * Resets the failed login count for a user upon successful login.
+ */
+async function resetFailedAttempts(userId) {
+  await pool.query(
+    'UPDATE users SET failed_attempts = 0, last_failed_at = NULL, lockout_until = NULL WHERE id = ?',
+    [userId]
+  );
+}
 
 
 // Export all functions at the very bottom
@@ -106,6 +129,9 @@ module.exports = {
   pool,
   getPatientHistory,
   getPatientHistoryByName,
-  registerPatient, // Now this function exists!
-  createPrescription
+  createPrescription,
+  findUserByEmailOrUsername, // <-- Now this function exists for your server
+  createUser,                // <-- Now this function exists for your server
+  incrementFailedAttempts,   // <-- And your new functions are here
+  resetFailedAttempts
 };

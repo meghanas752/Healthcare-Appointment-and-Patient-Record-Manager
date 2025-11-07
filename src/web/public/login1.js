@@ -1,68 +1,132 @@
 // login1.js
 
 document.addEventListener('DOMContentLoaded', () => {
-  // We'll assume your form has id="loginForm"
   const loginForm = document.getElementById('loginForm'); 
-  // We'll assume you have a message div with id="message"
   const messageEl = document.getElementById('message'); 
+  
+  // ** NEW: Get the new counter elements **
+  const failCounterCard = document.getElementById('fail-counter-card');
+  const failCountEl = document.getElementById('fail-count');
+  const loginButton = loginForm.querySelector('button[type="submit"]'); // Get the button
 
   if (loginForm) {
     loginForm.addEventListener('submit', async (event) => {
       event.preventDefault();
+      
+      // ** NEW: Reset UI on new submit **
       messageEl.textContent = '';
-      messageEl.className = 'msg'; // Reset class
-      messageEl.style.color = 'red'; // Default to error
+      messageEl.className = 'msg';
+      loginButton.disabled = false;
+      loginButton.textContent = 'Login';
+      // Don't hide the fail counter card yet
 
-      // Get values from the form inputs
       const identifier = document.getElementById('identifier').value.trim();
       const password = document.getElementById('password').value;
 
       try {
-        // Use a relative path
         const response = await fetch('/api/auth/login', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             identifier: identifier, 
             password: password
           })
         });
 
+        // ** NEW: Get the JSON body for BOTH success and error **
         const result = await response.json();
 
         if (!response.ok) {
-          throw new Error(result.message || 'Login failed.');
+          // --- THIS IS THE NEW ERROR HANDLING ---
+          messageEl.textContent = result.message; // Use the server's message
+          messageEl.style.color = 'red';
+
+          if (response.status === 401 && result.failedAttempts) {
+            // 401: Wrong Password
+            updateFailCounter(result.failedAttempts);
+            if (result.failedAttempts >= 5) {
+              startLockout(30); // 30 second lockout
+            }
+          }
+          if (response.status === 429) {
+            // 429: Account is Already Locked
+            updateFailCounter(5); // Show 5 attempts
+            startLockout(30); // Start a 30 sec timer
+          }
+          return; // Stop the function here
         }
 
-        // --- THIS IS THE NEW INTEGRATION ---
+        // --- THIS IS THE SUCCESS LOGIC ---
         
         // 1. Show success message
         messageEl.textContent = 'Login successful! Redirecting...';
         messageEl.style.color = 'green';
         
-        // 2. Save the user's info in the browser's storage
-        // This is how your dashboard will know who is logged in
+        // ** NEW: Hide the fail counter on success **
+        if(failCounterCard) {
+            failCounterCard.classList.add('hidden');
+        }
+        
+        // 2. Save the user's info
         localStorage.setItem('user', JSON.stringify(result.user));
 
-        // 3. Redirect based on their role (which we added in Phase 2)
+        // 3. Redirect (Your existing logic - UNCHANGED)
         setTimeout(() => {
           if (result.user.role === 'DOCTOR') {
-            // We must provide the FULL path from the root
             window.location.href = '/web/public/doctor-patient-profile.html'; 
           } else if (result.user.role === 'PATIENT') {
-            // You'll need to create this page for your teammate
             window.location.href = '/web/public/appointments.html'; 
           } else {
-            // Failsafe, just in case
             alert('Login successful, but your role is not recognized.');
           }
-        }, 1500); // Wait 1.5 seconds
+        }, 1500);
 
       } catch (error) {
-        messageEl.textContent = error.message;
+        // This catch is for NETWORK errors (server is down)
+        console.error('Network Error:', err);
+        messageEl.textContent = 'Network error. Please try again.';
+        messageEl.style.color = 'red';
       }
     });
+  }
+
+  // --- NEW HELPER FUNCTIONS (Add these to the end of the file) ---
+
+  /**
+   * Shows the fail counter card and updates the count.
+   */
+  function updateFailCounter(count) {
+    if (failCounterCard && failCountEl) {
+      failCounterCard.classList.remove('hidden');
+      failCountEl.textContent = count;
+    }
+  }
+
+  /**
+   * Disables the login button and starts a 30-second countdown timer.
+   */
+  function startLockout(seconds) {
+    if (!loginButton || !messageEl) return;
+
+    loginButton.disabled = true;
+    let secondsLeft = seconds;
+    
+    // Set the message immediately
+    messageEl.textContent = `Account locked. Please wait ${secondsLeft} seconds.`;
+    messageEl.style.color = 'red';
+
+    // Start a timer to update the message every second
+    const timer = setInterval(() => {
+      secondsLeft--;
+      if (secondsLeft > 0) {
+        messageEl.textContent = `Account locked. Please wait ${secondsLeft} seconds.`;
+      } else {
+        clearInterval(timer); // Stop the timer
+        messageEl.textContent = 'Account unlocked. You can try again.';
+        messageEl.style.color = 'green'; // Change to green to show it's unlocked
+        loginButton.disabled = false;
+        loginButton.textContent = 'Login';
+      }
+    }, 1000); // 1000ms = 1 second
   }
 });

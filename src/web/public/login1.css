@@ -25,3 +25,25 @@ body {
   border-radius:8px; background:#e53935; color:white; font-weight:600;
 }
 .msg { margin-top:12px; font-size:13px; color:#b00020; }
+
+/* --- STYLES FOR FAIL COUNTER --- */
+.fail-counter {
+  margin-top: 15px;
+  padding: 12px;
+  background-color: #fff4e6; /* Light orange/yellow */
+  border: 1px solid #ffc107;  /* Orange/yellow border */
+  border-radius: 6px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #c55a11; /* Dark orange text */
+  transition: all 0.3s ease;
+}
+
+.fail-counter.hidden {
+  display: none;
+}
+
+.fail-counter #fail-count {
+  font-weight: bold;
+  font-size: 1.1em;
+}

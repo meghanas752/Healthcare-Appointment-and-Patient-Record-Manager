@@ -4,6 +4,7 @@
 const express = require('express');
 const patientRoutes = require('./routes/patients');
 const bedRoutes = require('./routes/beds'); // Kept this line
+const pharmacyRoute = require('./Routes/PharmacyRoute');
 const db = require('./db-config');         // Kept this line
 
 // 2. Create the Express application
@@ -18,6 +19,7 @@ app.use(express.static('public')); // Kept the functional code
 // 4. Define the API Routes
 app.use('/api/patients', patientRoutes);
 app.use('/api/beds', bedRoutes); // Kept this line
+app.use('/pharmacy', pharmacyRoute);
 
 // 5. Start the Server
 app.listen(PORT, () => {

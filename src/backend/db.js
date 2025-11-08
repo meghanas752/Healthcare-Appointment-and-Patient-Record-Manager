@@ -99,6 +99,15 @@ async function registerPatient(patientData) {
   return { id: result.insertId, name: name, email: email };
 }
 // ***** END OF MISSING FUNCTION *****
+(async () => {
+  try {
+    const conn = await pool.getConnection();
+    console.log('✅ Connected to MySQL');
+    conn.release();
+  } catch (err) {
+    console.error('❌ MySQL connection failed:', err.message);
+  }
+})(); 
 
 
 // Export all functions at the very bottom

@@ -74,9 +74,13 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           if (result.user.role === 'DOCTOR') {
             window.location.href = '/web/public/doctor-patient-profile.html'; 
-          } else if (result.user.role === 'PATIENT') {
+          } else if (result.user.role === 'STAFF') {
             window.location.href = '/web/public/appointments.html'; 
-          } else {
+          } 
+          else if (result.user.role === 'PHARMACIST') {
+            window.location.href = '/web/public/appointments.html'; 
+          } 
+          else {
             alert('Login successful, but your role is not recognized.');
           }
         }, 1500);

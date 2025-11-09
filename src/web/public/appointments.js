@@ -50,3 +50,33 @@
 
   // Load when page opens
   loadAppointments();
+
+
+  // ==============================
+  // ✅ LOGOUT FUNCTIONALITY ADDED
+  // ==============================
+  document.addEventListener('DOMContentLoaded', () => {
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        try {
+          // Optional backend logout call if available
+          // await fetch('/api/auth/logout', { method: 'POST' });
+
+          // Clear any session or login flags
+          sessionStorage.clear();
+          localStorage.clear();
+
+          // ✅ Redirect to login page
+          window.location.href = '/web/public/login1.html';
+        } catch (error) {
+          console.error('Logout failed:', error);
+          // Even if something goes wrong, redirect anyway
+          window.location.href = '/web/public/login1.html';
+        }
+      });
+    }
+  });

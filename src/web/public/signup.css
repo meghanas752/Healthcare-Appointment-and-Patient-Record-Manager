@@ -91,3 +91,19 @@ body {
   color: white;
   border-color: #34495e;
 }
+.redirect-text {
+  text-align: center;
+  font-size: 13px;
+  margin-top: 12px;
+  color: #444;
+}
+
+.redirect-text a {
+  color: #34495e;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.redirect-text a:hover {
+  text-decoration: underline;
+}

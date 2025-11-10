@@ -1,72 +1,53 @@
 // routes/beds.js
-
-// routes/beds.js
-
 const express = require('express');
 const router = express.Router();
-// This path also needs to go UP ONE FOLDER
-const db = require('../db-config');
+// We also import the team's 'pool' here
+const { pool } = require('../src/backend/db.js');
 
-// API Endpoint #1: GET all beds and their status
-// This will be used to show the nurse a list of available beds.
-// URL: GET /api/beds
-router.get('/', (req, res) => {
-    // We use a JOIN to get the ward name along with the bed details
-    const sql = `
-        SELECT 
-            beds.id, 
-            beds.bed_number, 
-            beds.is_occupied, 
-            wards.name AS ward_name 
-        FROM beds 
-        JOIN wards ON beds.ward_id = wards.id
-        ORDER BY wards.name, beds.bed_number;
-    `;
-
-    db.query(sql, (err, beds) => {
-        if (err) {
-            console.error('Error fetching beds:', err);
-            return res.status(500).json({ error: 'Database error occurred.' });
-        }
-        res.json(beds); // Send the list of beds back as JSON
-    });
+router.get('/', async (req, res) => { // Made this async
+    try {
+        const sql = `
+            SELECT 
+                beds.id, 
+                beds.bed_number, 
+                beds.is_occupied, 
+                wards.name AS ward_name 
+            FROM beds 
+            JOIN wards ON beds.ward_id = wards.id
+            ORDER BY wards.name, beds.bed_number;
+        `;
+        // Use the new async/await syntax
+        const [beds] = await pool.query(sql);
+        res.json(beds);
+    } catch (err) {
+        console.error('Error fetching beds:', err);
+        return res.status(500).json({ error: 'Database error occurred.' });
+    }
 });
 
-// API Endpoint #2: ASSIGN a patient to a bed
-// This will be used when the nurse clicks "Assign" for a patient.
-// URL: POST /api/beds/assign
-router.post('/assign', (req, res) => {
-    const { patientId, bedId } = req.body;
+// THIS IS THE MODIFIED ROUTE
+router.post('/assign', async (req, res) => { // Made this async
+    try {
+        // 'patientId' from the frontend is now actually the 'appointmentId'
+        const { patientId: appointmentId, bedId } = req.body;
 
-    if (!patientId || !bedId) {
-        return res.status(400).json({ error: 'Patient ID and Bed ID are required.' });
-    }
-
-    // We need to do two things:
-    // 1. Update the patient's record with the bed_id.
-    // 2. Mark the bed as occupied.
-    // We will do this as two separate queries for simplicity. A transaction would be better for a production app.
-
-    // Query 1: Update the patients table
-    const updatePatientSql = 'UPDATE patients SET bed_id = ? WHERE id = ?';
-    db.query(updatePatientSql, [bedId, patientId], (err, result) => {
-        if (err) {
-            console.error('Error assigning bed to patient:', err);
-            return res.status(500).json({ error: 'Failed to update patient record.' });
+        if (!appointmentId || !bedId) {
+            return res.status(400).json({ error: 'Appointment ID and Bed ID are required.' });
         }
 
-        // Query 2: Update the beds table
-        const updateBedSql = 'UPDATE beds SET is_occupied = TRUE WHERE id = ?';
-        db.query(updateBedSql, [bedId], (err, result) => {
-            if (err) {
-                console.error('Error marking bed as occupied:', err);
-                // This is a partial failure, might need more robust handling in a real app
-                return res.status(500).json({ error: 'Failed to mark bed as occupied.' });
-            }
+        // 1. Update the APPOINTMENTS table (instead of the patients table)
+        const updateAppointmentSql = 'UPDATE appointments SET bed_id = ? WHERE id = ?';
+        await pool.query(updateAppointmentSql, [bedId, appointmentId]);
 
-            res.json({ message: `Successfully assigned patient ${patientId} to bed ${bedId}.` });
-        });
-    });
+        // 2. Update the beds table (this stays the same)
+        const updateBedSql = 'UPDATE beds SET is_occupied = TRUE WHERE id = ?';
+        await pool.query(updateBedSql, [bedId]);
+
+        res.json({ message: `Successfully assigned appointment ${appointmentId} to bed ${bedId}.` });
+    } catch (err) {
+        console.error('Error assigning bed:', err);
+        return res.status(500).json({ error: 'Failed to assign bed.' });
+    }
 });
 
 module.exports = router;

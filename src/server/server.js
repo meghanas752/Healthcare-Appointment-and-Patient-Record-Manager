@@ -6,6 +6,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const bcrypt = require("bcryptjs"); // Use the same bcrypt as your teammate
+const patientRoutes = require('../../routes/patients.js');
+const bedRoutes = require('../../routes/beds.js');
 
 // Import ALL functions from your ONE working database file
 const { 
@@ -30,7 +32,14 @@ app.use(express.json());
 // Static File Serving (for your HTML/CSS/JS)
 app.use(express.static(path.join(__dirname, '..')));
 
+// This path is correct because you are running the server from the main project folder
+app.use(express.static('src/web/public'));
+app.use(express.static('public'));
+
 // --- 4. ALL API ROUTES ---
+
+app.use('/api/patients', patientRoutes);
+app.use('/api/beds', bedRoutes);
 
 // ---------------- PATIENT ROUTES (Your code) ----------------
 app.get('/api/patients/:id/history', async (req, res) => {

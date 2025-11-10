@@ -6,6 +6,59 @@ let currentPatientId = null;
  * before we try to find any buttons or forms.
  */
 document.addEventListener('DOMContentLoaded', () => {
+
+  // --- NEW AUTH GUARD (ADD THIS!) ---
+  const userString = localStorage.getItem('user');
+  let loggedInUser = null;
+  
+  if (!userString) {
+    // If user is not in storage, kick them to login
+    alert('You must be logged in to view this page.');
+    window.location.href = '/web/public/login1.html'; // Go back to the root login page
+    return; // Stop running the rest of the script
+  }
+
+  try {
+    loggedInUser = JSON.parse(userString);
+  } catch (e) {
+    console.error('Failed to parse user from localStorage', e);
+    alert('Invalid session. Please log in again.');
+    window.location.href = '/login1.html';
+    return;
+  }
+  
+  if (loggedInUser.role !== 'DOCTOR') {
+    // If user is not a Doctor, kick them to login
+    alert('Access denied. This page is for Doctors only.');
+    window.location.href = '/login1.html'; // Go back to the root login page
+    return; // Stop running the rest of the script
+  }
+
+  // **NEW:** Let's also say hello to the doctor!
+  // Find the 'Dr. Megha' text and replace it.
+  const doctorNameEl = document.querySelector('.sidebar-footer strong');
+  if (doctorNameEl) {
+    doctorNameEl.textContent = loggedInUser.username;
+  }
+  // --- END OF AUTH GUARD ---
+
+  // --- **** NEW LOGOUT BUTTON LOGIC **** ---
+  const logoutButton = document.getElementById('logout-button');
+  
+  if (logoutButton) {
+    logoutButton.addEventListener('click', (event) => {
+      event.preventDefault(); // Stop the link from just adding a '#'
+      
+      // 1. Remove the user from storage
+      localStorage.removeItem('user');
+      
+      // 2. Send them back to the login page
+      window.location.href = '/web/public/login1.html'; // Use the absolute path
+    });
+  }
+  // --- **** END OF NEW LOGOUT LOGIC **** ---
+
+
   
   // --- Search Feature Setup ---
   const searchButton = document.getElementById('search-button');

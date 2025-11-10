@@ -69,6 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // 2. Save the user's info
         localStorage.setItem('user', JSON.stringify(result.user));
+        sessionStorage.setItem("username", result.user.username);
+        sessionStorage.setItem("role", result.user.role);
 
         // 3. Redirect (Your existing logic - UNCHANGED)
         setTimeout(() => {

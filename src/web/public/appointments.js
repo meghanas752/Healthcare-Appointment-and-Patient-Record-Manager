@@ -80,3 +80,16 @@
       });
     }
   });
+
+  // ==============================
+// ✅ SHOW LOGGED IN USER
+// ==============================
+document.addEventListener("DOMContentLoaded", () => {
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+
+  if (storedUser && storedUser.username) {
+    const nameBox = document.getElementById("loggedUser");
+    nameBox.textContent = storedUser.username;  // ✅ only username now
+  }
+});
+

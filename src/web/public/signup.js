@@ -3,7 +3,24 @@
 // Wrap everything in a DOMContentLoaded listener
 document.addEventListener('DOMContentLoaded', () => {
   
-  // Find the form and message elements
+  // === ROLE BUTTON LOGIC ===
+  const roleButtons = document.querySelectorAll('.role-btn');
+  const hiddenRoleInput = document.getElementById('role');
+
+  if (roleButtons.length > 0) {
+    roleButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // Remove active state from all buttons
+        roleButtons.forEach(btn => btn.classList.remove('active'));
+        // Highlight selected button
+        button.classList.add('active');
+        // Store the selected role in hidden input
+        hiddenRoleInput.value = button.dataset.role;
+      });
+    });
+  }
+
+  // === SIGNUP FORM LOGIC ===
   const signupForm = document.getElementById('signupForm');
   const msgEl = document.getElementById('message');
 
@@ -11,44 +28,40 @@ document.addEventListener('DOMContentLoaded', () => {
   if (signupForm) {
     signupForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      
       const email = document.getElementById('email').value.trim();
       const username = document.getElementById('username').value.trim();
       const password = document.getElementById('password').value;
-      
-      // Get the role and convert it to UPPERCASE for the database
-      const role = document.getElementById('role').value.trim().toUpperCase(); 
+      const role = hiddenRoleInput.value.trim().toUpperCase();  // Get from hidden input
 
       msgEl.textContent = '';
-      msgEl.style.color = 'red'; // Default to error color
+      msgEl.style.color = 'red'; // Default color
 
       if (!role) {
-        msgEl.textContent = 'Role is required (e.g., DOCTOR or PATIENT).';
+        msgEl.textContent = 'Please select a role (Doctor, Staff, or Pharmacist).';
         return;
       }
 
       try {
-        // Use a relative path, which is safer now that your server is set up
         const res = await fetch('/api/auth/signup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, email, password, role })
         });
-        
+
         const data = await res.json();
-        
+
         if (!res.ok) {
-          // If the server sends an error (like 409 "Email already exists"), show it
           msgEl.textContent = data.message || 'Signup failed';
           return;
         }
 
-        // --- THIS IS THE NEW INTEGRATION ---
-        msgEl.style.color = "green";
+        msgEl.style.color = 'green';
         msgEl.textContent = 'Signup successful! Redirecting to login...';
-        
-        // Wait 2 seconds so the user can read the message, then redirect
+
+        // Redirect after 2 seconds
         setTimeout(() => {
-        window.location.href = '/web/public/login1.html'; // Use the full path
+          window.location.href = '/web/public/login1.html';
         }, 2000);
 
       } catch (err) {

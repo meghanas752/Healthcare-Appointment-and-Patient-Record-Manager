@@ -69,14 +69,20 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // 2. Save the user's info
         localStorage.setItem('user', JSON.stringify(result.user));
+        sessionStorage.setItem("username", result.user.username);
+        sessionStorage.setItem("role", result.user.role);
 
         // 3. Redirect (Your existing logic - UNCHANGED)
         setTimeout(() => {
           if (result.user.role === 'DOCTOR') {
             window.location.href = '/web/public/doctor-patient-profile.html'; 
-          } else if (result.user.role === 'PATIENT') {
+          } else if (result.user.role === 'STAFF') {
             window.location.href = '/web/public/appointments.html'; 
-          } else {
+          } 
+          else if (result.user.role === 'PHARMACIST') {
+            window.location.href = '/web/public/appointments.html'; 
+          } 
+          else {
             alert('Login successful, but your role is not recognized.');
           }
         }, 1500);

@@ -22,9 +22,9 @@ body {
 }
 .login-container button {
   margin-top:16px; width:100%; padding:10px; border:none;
-  border-radius:8px; background:#e53935; color:white; font-weight:600;
+  border-radius:8px; background:#34495e; color:white; font-weight:600;
 }
-.msg { margin-top:12px; font-size:13px; color:#b00020; }
+.msg { margin-top:12px; font-size:13px; color:#34495e; }
 
 /* --- STYLES FOR FAIL COUNTER --- */
 .fail-counter {

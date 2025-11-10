@@ -18,11 +18,24 @@
       <label for="password">Password</label>
       <input id="password" name="password" type="password" required />
 
-      <label for="role">Role</label>
-      <!-- Changed from role buttons to text input -->
-      <input id="role" name="role" type="text" placeholder="Enter your role (e.g. Doctor)" required />
+      <label>Role</label>
+      <div id="role-buttons" class="role-buttons">
+       <button type="button" class="role-btn" data-role="Doctor">Doctor</button>
+       <button type="button" class="role-btn" data-role="Staff">Staff</button>
+       <button type="button" class="role-btn" data-role="Pharmacist">Pharmacist</button>
+      </div>
+
+<!-- Hidden input to store selected role -->
+      <input type="hidden" id="role" name="role" required />
+
+
+      
 
       <button type="submit">Signup</button>
+      <p class="redirect-text">
+  Already registered? <a href="login1.html">Login here</a>
+</p>
+
     </form>
     <div id="message" class="msg"></div>
   </div>

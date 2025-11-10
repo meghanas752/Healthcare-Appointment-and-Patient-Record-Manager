@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pharmacist Inventory Dashboard</title>
+  <link rel="stylesheet" href="pharmacy.css" />
+</head>
+<body>
+  <div class="pharmacy-container">
+    <h1>Pharmacist Inventory Dashboard</h1>
+
+    <table id="inventory-table">
+      <thead>
+        <tr>
+          <th>Drug Code</th>
+          <th>Drug Name</th>
+          <th>Stock</th>
+          <th>Last Updated</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="actions">
+      <form id="restock-form">
+        <h3>Restock Medicine</h3>
+        <input type="text" id="restock_code" placeholder="Drug Code" required />
+        <input type="number" id="restock_qty" placeholder="Quantity" required />
+        <button type="submit">Restock</button>
+      </form>
+
+      <form id="dispense-form">
+        <h3>Dispense Medicine</h3>
+        <input type="text" id="dispense_code" placeholder="Drug Code" required />
+        <input type="number" id="dispense_qty" placeholder="Quantity" required />
+        <input type="number" id="ref_id" placeholder="Prescription ID (optional)" />
+        <button type="submit">Dispense</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="pharmacy.js"></script>
+</body>
+</html>

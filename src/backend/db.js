@@ -124,6 +124,7 @@ async function resetFailedAttempts(userId) {
 }
 
 
+
 // Export all functions at the very bottom
 module.exports = {
   pool,

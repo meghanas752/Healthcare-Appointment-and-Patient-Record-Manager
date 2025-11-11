@@ -1,14 +1,13 @@
+// src/server/server.js
+
 // --- 1. ALL REQUIRE STATEMENTS ---
-// This is the CRITICAL fix:
-// It tells dotenv to look "up two folders" for the .env file in your main project root.
+// This is the CRITICAL fix to read your .env file
 require('dotenv').config({ path: __dirname + '/../../.env' }); 
 
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const bcrypt = require("bcryptjs");
-const patientRoutes = require('../../routes/patients.js'); // Your feature
-const bedRoutes = require('../../routes/beds.js');       // Your feature
 
 // Import ALL functions from the team's official database file
 const { 
@@ -31,14 +30,12 @@ app.use(cors());
 app.use(express.json());
 
 // Static File Serving (for your HTML/CSS/JS)
-// This line serves your teammate's files (e.g., appointments.html)
-app.use(express.static('src/web/public'));
-// This line serves YOUR files (e.g., index.html, beds.html)
-app.use(express.static('public')); 
+app.use(express.static(path.join(__dirname, '..'))); // This is their original line
+app.use(express.static('src/web/public')); // This serves your friend's pages
 
 // --- 4. ALL API ROUTES ---
 
-// Your teammate's routes
+// ---------------- TEAMMATE'S PATIENT ROUTES ----------------
 app.get('/api/patients/:id/history', async (req, res) => {
   try {
     const patientId = req.params.id;
@@ -58,7 +55,7 @@ app.get('/api/patients/search', async (req, res) => {
     }
     const { patient, history } = await getPatientHistoryByName(patientName);
     if (!patient) {
-      return res.status(44).json({ message: 'Patient not found.' });
+      return res.status(404).json({ message: 'Patient not found.' });
     }
     res.json({ patient, history });
   } catch (error) {
@@ -67,6 +64,84 @@ app.get('/api/patients/search', async (req, res) => {
   }
 });
 
+// ---------------- YOUR PATIENT ROUTES (FROM HMPRS-18 & 30) ----------------
+app.post('/api/patients/register', async (req, res) => {
+    try {
+        const { firstName, lastName, phone, medicalHistory, currentMedications } = req.body;
+        if (!firstName || !lastName) {
+            return res.status(400).json({ error: 'First name and last name are required.' });
+        }
+        const newPatient = {
+            name: `${firstName} ${lastName}`,
+            phone_number: phone,
+            medical_history: medicalHistory,
+            current_medications: currentMedications
+        };
+        const sql = 'INSERT INTO patients SET ?';
+        const [result] = await pool.query(sql, newPatient);
+
+        console.log('1 patient record inserted with full details, ID: ', result.insertId);
+        res.status(201).json({
+            message: 'Patient registered successfully!',
+            patientId: result.insertId
+        });
+    } catch (err) {
+        console.error('Error inserting patient:', err);
+        return res.status(500).json({ error: 'A database error occurred.' });
+    }
+});
+
+app.get('/api/patients/unassigned', async (req, res) => {
+    try {
+        const sql = 'SELECT id, patient_name AS name FROM appointments WHERE bed_id IS NULL';
+        const [patients] = await pool.query(sql);
+        res.json(patients);
+    } catch (err) {
+        console.error('Error fetching unassigned appointments:', err);
+        return res.status(500).json({ error: 'Database error occurred.' });
+    }
+});
+
+// ---------------- YOUR BED ROUTES (FROM HMPRS-30) ----------------
+app.get('/api/beds', async (req, res) => {
+    try {
+        const sql = `
+            SELECT 
+                beds.id, 
+                beds.bed_number, 
+                beds.is_occupied, 
+                wards.name AS ward_name 
+            FROM beds 
+            JOIN wards ON beds.ward_id = wards.id
+            ORDER BY wards.name, beds.bed_number;
+        `;
+        const [beds] = await pool.query(sql);
+        res.json(beds);
+    } catch (err) {
+        console.error('Error fetching beds:', err);
+        return res.status(500).json({ error: 'Database error occurred.' });
+    }
+});
+
+app.post('/api/beds/assign', async (req, res) => {
+    try {
+        const { patientId: appointmentId, bedId } = req.body;
+        if (!appointmentId || !bedId) {
+            return res.status(400).json({ error: 'Appointment ID and Bed ID are required.' });
+        }
+        const updateAppointmentSql = 'UPDATE appointments SET bed_id = ? WHERE id = ?';
+        await pool.query(updateAppointmentSql, [bedId, appointmentId]);
+        const updateBedSql = 'UPDATE beds SET is_occupied = TRUE WHERE id = ?';
+        await pool.query(updateBedSql, [bedId]);
+        res.json({ message: `Successfully assigned appointment ${appointmentId} to bed ${bedId}.` });
+    } catch (err) {
+        console.error('Error assigning bed:', err);
+        return res.status(500).json({ error: 'Failed to assign bed.' });
+    }
+});
+
+
+// ---------------- PRESCRIPTION ROUTES ----------------
 app.post('/api/prescriptions', async (req, res) => {
   try {
     const { patientId, details } = req.body;
@@ -81,22 +156,26 @@ app.post('/api/prescriptions', async (req, res) => {
   }
 });
 
+// ---------------- AUTH ROUTES ----------------
 app.post("/api/auth/login", async (req, res) => {
   console.log("🔹 Received POST /api/auth/login");
   const { identifier, password } = req.body;
   if (!identifier || !password) {
     return res.status(400).json({ status: "error", message: "Username/email and password are required." });
   }
+
   try {
     const user = await findUserByEmailOrUsername(identifier); 
     if (!user) {
       return res.status(401).json({ status: "fail", message: "Invalid username or password." });
     }
+    
     if (user.failed_attempts >= 5) {
       if (user.last_failed_at) {
         const now = new Date();
         const lastFailed = new Date(user.last_failed_at);
         const secondsSinceLastFail = (now.getTime() - lastFailed.getTime()) / 1000;
+
         if (secondsSinceLastFail < 30) {
           return res.status(429).json({ 
             status: "fail", 
@@ -105,21 +184,28 @@ app.post("/api/auth/login", async (req, res) => {
         }
       }
     }
+
     const isMatch = await bcrypt.compare(password, user.password_hash);
+
     if (!isMatch) {
       await incrementFailedAttempts(user.id);
+      
       const newCount = user.failed_attempts + 1;
       let message = "Invalid username or password.";
+
       if (newCount >= 5) {
         message = "Invalid password. Account is now locked for 30 seconds.";
       }
+      
       return res.status(401).json({ 
         status: "fail", 
         message: message,
         failedAttempts: newCount 
       });
     }
+
     await resetFailedAttempts(user.id);
+
     return res.json({
       status: "success",
       message: "Login successful!",
@@ -129,6 +215,7 @@ app.post("/api/auth/login", async (req, res) => {
         role: user.role 
       },
     });
+
   } catch (err) {
     console.error("❌ Error during login:", err);
     return res.status(500).json({ status: "error", message: "Internal Server Error" });
@@ -141,9 +228,11 @@ app.post("/api/auth/signup", async (req, res) => {
   if (!username || !email || !password || !role) {
     return res.status(400).json({ status: "error", message: "All fields are required." });
   }
+
   try {
     const password_hash = await bcrypt.hash(password, 10);
     const newUser = await createUser({ username, email, password_hash, role });
+
     res.status(201).json({
       status: "success",
       message: "User registered successfully!",
@@ -158,6 +247,7 @@ app.post("/api/auth/signup", async (req, res) => {
   }
 });
 
+// ---------------- APPOINTMENT ROUTES ----------------
 app.get('/api/appointments', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM appointments');
@@ -202,10 +292,7 @@ app.delete('/api/appointments/:id', async (req, res) => {
   }
 });
 
-// YOUR NEW API ROUTES
-app.use('/api/patients', patientRoutes);
-app.use('/api/beds', bedRoutes);
-
+// ---------------------------------------------------------
 // --- 5. START THE SERVER (at the end of the file) ---
 if (process.env.NODE_ENV !== 'test') {
   app.listen(port, () => {

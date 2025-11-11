@@ -1,22 +1,25 @@
-// src/server/server.js
-
 // --- 1. ALL REQUIRE STATEMENTS ---
-require('dotenv').config();
+// This is the CRITICAL fix:
+// It tells dotenv to look "up two folders" for the .env file in your main project root.
+require('dotenv').config({ path: __dirname + '/../../.env' }); 
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const bcrypt = require("bcryptjs"); // Use the same bcrypt as your teammate
+const bcrypt = require("bcryptjs");
+const patientRoutes = require('../../routes/patients.js'); // Your feature
+const bedRoutes = require('../../routes/beds.js');       // Your feature
 
-// Import ALL functions from your ONE working database file
+// Import ALL functions from the team's official database file
 const { 
   pool, 
   getPatientHistory, 
   getPatientHistoryByName, 
   createPrescription,
-  findUserByEmailOrUsername, // This will come from db.js
-  createUser,                // This will come from db.js
-  incrementFailedAttempts,   // This will come from db.js
-  resetFailedAttempts        // This will come from db.js
+  findUserByEmailOrUsername,
+  createUser,
+  incrementFailedAttempts,
+  resetFailedAttempts 
 } = require('../backend/db.js'); 
 
 // --- 2. DEFINE THE APP (ONLY ONCE) ---
@@ -28,11 +31,14 @@ app.use(cors());
 app.use(express.json());
 
 // Static File Serving (for your HTML/CSS/JS)
-app.use(express.static(path.join(__dirname, '..')));
+// This line serves your teammate's files (e.g., appointments.html)
+app.use(express.static('src/web/public'));
+// This line serves YOUR files (e.g., index.html, beds.html)
+app.use(express.static('public')); 
 
 // --- 4. ALL API ROUTES ---
 
-// ---------------- PATIENT ROUTES (Your code) ----------------
+// Your teammate's routes
 app.get('/api/patients/:id/history', async (req, res) => {
   try {
     const patientId = req.params.id;
@@ -52,7 +58,7 @@ app.get('/api/patients/search', async (req, res) => {
     }
     const { patient, history } = await getPatientHistoryByName(patientName);
     if (!patient) {
-      return res.status(404).json({ message: 'Patient not found.' });
+      return res.status(44).json({ message: 'Patient not found.' });
     }
     res.json({ patient, history });
   } catch (error) {
@@ -61,7 +67,6 @@ app.get('/api/patients/search', async (req, res) => {
   }
 });
 
-// ---------------- PRESCRIPTION ROUTES (Your code) ----------------
 app.post('/api/prescriptions', async (req, res) => {
   try {
     const { patientId, details } = req.body;
@@ -76,61 +81,45 @@ app.post('/api/prescriptions', async (req, res) => {
   }
 });
 
-// ---------------- AUTH ROUTES (Now using your working db.js) ----------------
 app.post("/api/auth/login", async (req, res) => {
   console.log("🔹 Received POST /api/auth/login");
   const { identifier, password } = req.body;
   if (!identifier || !password) {
     return res.status(400).json({ status: "error", message: "Username/email and password are required." });
   }
-
   try {
-    // Use the NEW, WORKING function from db.js
     const user = await findUserByEmailOrUsername(identifier); 
     if (!user) {
       return res.status(401).json({ status: "fail", message: "Invalid username or password." });
     }
-    
-    // --- THIS IS YOUR NEW LOCKOUT LOGIC ---
     if (user.failed_attempts >= 5) {
       if (user.last_failed_at) {
         const now = new Date();
         const lastFailed = new Date(user.last_failed_at);
         const secondsSinceLastFail = (now.getTime() - lastFailed.getTime()) / 1000;
-
         if (secondsSinceLastFail < 30) {
-          return res.status(429).json({ // 429 = Too Many Requests
+          return res.status(429).json({ 
             status: "fail", 
             message: `Account locked. Please wait ${Math.ceil(30 - secondsSinceLastFail)} seconds.` 
           });
         }
       }
     }
-    // --- END LOCKOUT LOGIC ---
-
     const isMatch = await bcrypt.compare(password, user.password_hash);
-
     if (!isMatch) {
-      // --- LOGIN FAILED (Wrong Password) ---
       await incrementFailedAttempts(user.id);
-      
       const newCount = user.failed_attempts + 1;
       let message = "Invalid username or password.";
-
       if (newCount >= 5) {
         message = "Invalid password. Account is now locked for 30 seconds.";
       }
-      
       return res.status(401).json({ 
         status: "fail", 
         message: message,
         failedAttempts: newCount 
       });
     }
-
-    // --- LOGIN SUCCESS ---
     await resetFailedAttempts(user.id);
-
     return res.json({
       status: "success",
       message: "Login successful!",
@@ -140,7 +129,6 @@ app.post("/api/auth/login", async (req, res) => {
         role: user.role 
       },
     });
-
   } catch (err) {
     console.error("❌ Error during login:", err);
     return res.status(500).json({ status: "error", message: "Internal Server Error" });
@@ -153,12 +141,9 @@ app.post("/api/auth/signup", async (req, res) => {
   if (!username || !email || !password || !role) {
     return res.status(400).json({ status: "error", message: "All fields are required." });
   }
-
   try {
-    // Use the NEW, WORKING function from db.js
     const password_hash = await bcrypt.hash(password, 10);
     const newUser = await createUser({ username, email, password_hash, role });
-
     res.status(201).json({
       status: "success",
       message: "User registered successfully!",
@@ -166,15 +151,13 @@ app.post("/api/auth/signup", async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Error during signup:", err);
-    if (err.code === 'ER_DUP_ENTRY') { // Check for specific SQL error
+    if (err.code === 'ER_DUP_ENTRY') { 
       return res.status(409).json({ status: "fail", message: "Username or email already exists." });
     }
     res.status(500).json({ status: "error", message: "Internal Server Error" });
   }
 });
 
-// ---------------- APPOINTMENT ROUTES (Your teammate's code) ----------------
-// (These will all work now because they use the 'pool' from db.js)
 app.get('/api/appointments', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM appointments');
@@ -219,7 +202,10 @@ app.delete('/api/appointments/:id', async (req, res) => {
   }
 });
 
-// ---------------------------------------------------------
+// YOUR NEW API ROUTES
+app.use('/api/patients', patientRoutes);
+app.use('/api/beds', bedRoutes);
+
 // --- 5. START THE SERVER (at the end of the file) ---
 if (process.env.NODE_ENV !== 'test') {
   app.listen(port, () => {

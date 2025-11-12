@@ -123,7 +123,20 @@ async function resetFailedAttempts(userId) {
   );
 }
 
+// ***** REPLACE THIS FUNCTION *****
 
+/**
+ * Fetches all appointments for a specific doctor, ordered by date and time.
+ * (FIXED: Using the correct 'appointment_time' spelling)
+ */
+async function getAppointmentsByDoctorName(doctorName) {
+  const [rows] = await pool.query(
+    // THE FIX is on this line:
+    'SELECT * FROM appointments WHERE doctor_name = ? ORDER BY appointment_date, appointment_time',
+    [doctorName]
+  );
+  return rows;
+}
 
 // Export all functions at the very bottom
 module.exports = {
@@ -134,5 +147,6 @@ module.exports = {
   findUserByEmailOrUsername, // <-- Now this function exists for your server
   createUser,                // <-- Now this function exists for your server
   incrementFailedAttempts,   // <-- And your new functions are here
-  resetFailedAttempts
+  resetFailedAttempts,
+  getAppointmentsByDoctorName
 };

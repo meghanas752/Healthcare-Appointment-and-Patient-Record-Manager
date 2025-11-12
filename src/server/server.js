@@ -18,7 +18,8 @@ const {
   findUserByEmailOrUsername,
   createUser,
   incrementFailedAttempts,
-  resetFailedAttempts 
+  resetFailedAttempts,
+  getAppointmentsByDoctorName // <-- THIS LINE IS ADDED
 } = require('../backend/db.js'); 
 
 // --- 2. DEFINE THE APP (ONLY ONCE) ---
@@ -248,6 +249,7 @@ app.post("/api/auth/signup", async (req, res) => {
 });
 
 // ---------------- APPOINTMENT ROUTES ----------------
+// ✅ Get all appointments (for staff)
 app.get('/api/appointments', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM appointments');
@@ -258,6 +260,20 @@ app.get('/api/appointments', async (req, res) => {
   }
 });
 
+// ***** THIS IS YOUR NEW ROUTE *****
+// ✅ Get appointments for a specific doctor (for your feature)
+app.get('/api/appointments/doctor/:name', async (req, res) => {
+  try {
+    const doctorName = req.params.name;
+    const appointments = await getAppointmentsByDoctorName(doctorName);
+    res.json(appointments);
+  } catch (error) {
+    console.error('Error fetching doctor appointments:', error);
+    res.status(500).json({ message: 'Error fetching appointments' });
+  }
+});
+
+// ✅ Add a new appointment
 app.post('/api/appointments', async (req, res) => {
   try {
     const { patient_name, doctor_name, appointment_date, appointment_time } = req.body;
@@ -280,6 +296,7 @@ app.post('/api/appointments', async (req, res) => {
   }
 });
 
+// ✅ Delete an appointment by ID
 app.delete('/api/appointments/:id', async (req, res) => {
   const id = parseInt(req.params.id);
   if (isNaN(id)) return res.status(400).json({ message: 'Invalid ID' });
@@ -291,8 +308,10 @@ app.delete('/api/appointments/:id', async (req, res) => {
     res.status(500).json({ message: 'Error deleting appointment.' });
   }
 });
-
+// ** NOTE: I have removed the duplicated APPOINTMENT ROUTES block from the end of your file. **
 // ---------------------------------------------------------
+
+
 // --- 5. START THE SERVER (at the end of the file) ---
 if (process.env.NODE_ENV !== 'test') {
   app.listen(port, () => {

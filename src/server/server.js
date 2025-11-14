@@ -274,27 +274,43 @@ app.get('/api/appointments/doctor/:name', async (req, res) => {
 });
 
 // ✅ Add a new appointment
+// ✅ Add a new appointment (with email + contact)
 app.post('/api/appointments', async (req, res) => {
   try {
-    const { patient_name, doctor_name, appointment_date, appointment_time } = req.body;
+    const { 
+      patient_name, 
+      patient_email,        // ⭐ ADDED
+      patient_contact,      // ⭐ ADDED
+      doctor_name, 
+      appointment_date, 
+      appointment_time 
+    } = req.body;
+
     const [result] = await pool.query(
-      'INSERT INTO appointments (patient_name, doctor_name, appointment_date, appointment_time, status) VALUES (?, ?, ?, ?, ?)',
-      [patient_name, doctor_name, appointment_date, appointment_time, 'Booked']
+      `INSERT INTO appointments 
+      (patient_name, patient_email, patient_contact, doctor_name, appointment_date, appointment_time, status) 
+      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [patient_name, patient_email, patient_contact, doctor_name, appointment_date, appointment_time, 'Booked']
     );
+
     const newAppointment = {
       id: result.insertId,
       patient_name,
+      patient_email,       // ⭐ ADDED
+      patient_contact,     // ⭐ ADDED
       doctor_name,
       appointment_date,
       appointment_time,
       status: 'Booked'
     };
+
     res.status(201).json(newAppointment);
   } catch (error) {
     console.error('Error inserting appointment:', error);
     res.status(500).json({ message: 'Error creating appointment' });
   }
 });
+
 
 // ✅ Delete an appointment by ID
 app.delete('/api/appointments/:id', async (req, res) => {

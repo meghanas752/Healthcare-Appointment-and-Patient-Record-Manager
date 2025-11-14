@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = '/web/public/appointments.html'; 
           } 
           else if (result.user.role === 'PHARMACIST') {
-            window.location.href = '/web/public/appointments.html'; 
+            window.location.href = '/web/public/pharmacy.html'; 
           } 
           else {
             alert('Login successful, but your role is not recognized.');

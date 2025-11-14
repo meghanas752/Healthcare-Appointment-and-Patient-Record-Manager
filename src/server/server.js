@@ -308,6 +308,93 @@ app.delete('/api/appointments/:id', async (req, res) => {
     res.status(500).json({ message: 'Error deleting appointment.' });
   }
 });
+
+
+
+
+//pharmacy inventory
+app.get("/pharmacy/inventory", async (req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT * FROM inventory_items");
+    res.json(rows);
+  } catch (err) {
+    console.error("Error loading inventory:", err);
+    res.status(500).json({ message: "Error loading inventory" });
+  }
+});
+
+app.post("/pharmacy/restock", async (req, res) => {
+  try {
+    const { drug_code, qty } = req.body;
+    if (!drug_code || !qty || qty <= 0) {
+      return res.status(400).send("drug_code and positive qty are required");
+    }
+   // 1) ensure the item exists
+    await pool.query(
+      "INSERT IGNORE INTO inventory_items (drug_code, drug_name, stock, updated_at) VALUES (?, ?, 0, NOW())",
+      [drug_code, drug_code] // use code as name if you don't have one
+    );
+
+    // 2) add stock
+    const [upd] = await pool.query(
+      "UPDATE inventory_items SET stock = stock + ?, updated_at = NOW() WHERE drug_code = ?",
+      [qty, drug_code]
+    );
+
+    if (upd.affectedRows === 0) {
+      return res.status(404).send("Drug code not found");
+    }
+
+     // 3) log movement (reason/type consistent)
+    await pool.query(
+      "INSERT INTO inventory_moves (drug_code, qty, reason, ref_type, type, reference_id) VALUES (?, ?, 'RESTOCK', 'MANUAL', 'RESTOCK', NULL)",
+      [drug_code, qty]
+    );
+
+    res.send("Restock successful!");
+  } catch (err) {
+    console.error("Error restocking:", err);
+    res.status(500).send("Error restocking medicine");
+  }
+});
+app.post("/pharmacy/dispense", async (req, res) => {
+  try {
+    const { drug_code, qty, ref_id } = req.body;
+    if (!drug_code || !qty || qty <= 0) {
+      return res.status(400).send("drug_code and positive qty are required");
+    }
+
+    // 1) check current stock
+    const [[item]] = await pool.query(
+      "SELECT stock FROM inventory_items WHERE drug_code = ?",
+      [drug_code]
+    );
+    if (!item) return res.status(404).send("Drug code not found");
+    if (item.stock < qty) return res.status(400).send("Insufficient stock");
+
+    // 2) reduce stock
+    await pool.query(
+      "UPDATE inventory_items SET stock = stock - ?, updated_at = NOW() WHERE drug_code = ?",
+      [qty, drug_code]
+    );
+
+    // 3) log movement; ref_type derived from presence of ref_id
+    const refType = ref_id ? "PRESCRIPTION" : "MANUAL";
+    await pool.query(
+      "INSERT INTO inventory_moves (drug_code, qty, reason, ref_type, type, reference_id) VALUES (?, ?, 'DISPENSE', ?, 'DISPENSE', ?)",
+      [drug_code, qty, refType, ref_id || null]
+    );
+
+      res.send("Medicine dispensed!");
+  } catch (err) {
+    console.error("Error dispensing:", err);
+    res.status(500).send("Error dispensing medicine");
+  }
+});
+
+
+
+
 // ** NOTE: I have removed the duplicated APPOINTMENT ROUTES block from the end of your file. **
 // ---------------------------------------------------------
 

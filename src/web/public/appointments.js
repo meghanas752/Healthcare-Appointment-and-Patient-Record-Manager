@@ -1,3 +1,28 @@
+// --- NEW CORRECT CODE (REPLACE WITH THIS) ---
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // --- START: Role-Based Menu Logic ---
+
+    // 1. Get the user *data string* from localStorage (using the key 'user')
+    const userDataString = localStorage.getItem('user'); 
+    const billingLink = document.getElementById('billing-nav-link');
+
+    // 2. Check if the data and the link both exist
+    if (userDataString && billingLink) {
+        try {
+            // 3. Parse the string into a JavaScript object
+            const user = JSON.parse(userDataString);
+
+            // 4. Check the 'role' property inside the object for "STAFF"
+            if (user.role === 'STAFF') {
+                billingLink.style.display = 'block'; // This will show the link
+            }
+        } catch (error) {
+            console.error('Error parsing user data:', error);
+        }
+    }
+    // --- END: Role-Based Menu Logic ---
+});
 async function loadAppointments() {
   const res = await fetch("http://localhost:3000/api/appointments");
   const data = await res.json();

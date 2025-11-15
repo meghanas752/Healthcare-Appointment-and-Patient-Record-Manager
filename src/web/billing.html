@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Patient Bill</title>
+    <link rel="stylesheet" href="style.css"> 
+</head>
+<body class="dashboard-page"> <div class="sidebar">
+        <h2>HMPRS</h2>
+        <a href="appointments.html">My Appointments</a>
+        <a href="beds.html">Ward allocation</a>
+        <a href="billing.html" class="active" id="billing-nav-link">Billing</a>
+        
+        <div class="bottom">
+            <p>Signed in as<br><strong>Staff User</strong></p>
+            <a href="#" id="logoutBtn" class="logout">Logout</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <main class="container">
+            <h1>Generate Patient Bill (HMPRS-28)</h1>
+            
+            <label for="patientSelect">Select Patient Appointment:</label><br>
+            <select id="patientSelect" name="patientId" required>
+                <option value="">Loading appointments...</option>
+            </select><br><br>
+
+            <button id="generateBillBtn">Generate Bill</button>
+
+            <hr style="margin: 30px 0;">
+
+            <h2>Itemized Bill</h2>
+            
+            <table id="billTable">
+                <thead>
+                    <tr>
+                        <th>Item Description</th>
+                        <th style="text-align: right;">Cost</th>
+                    </tr>
+                </thead>
+                <tbody id="billTableBody">
+                    <tr>
+                        <td colspan="2" style="text-align: center;">Please select a patient.</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th style="text-align: right;">TOTAL:</th>
+                        <th id="totalCost" style="text-align: right;">$0.00</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </main>
+    </div>
+
+    <script src="billing.js"></script>
+</body>
+</html>

@@ -29,6 +29,7 @@ const port = process.env.PORT || 3000;
 // --- 3. ALL MIDDLEWARE (app.use) ---
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, '../web/public')));
 
 // Static File Serving (for your HTML/CSS/JS)
 app.use(express.static(path.join(__dirname, '..'))); // This is their original line
@@ -141,6 +142,58 @@ app.post('/api/beds/assign', async (req, res) => {
     }
 });
 
+// ---------------- BILLING ROUTE (HMPRS-28) ----------------
+// This is the new API endpoint for your billing feature
+app.get('/api/billing/:appointmentId', async (req, res) => {
+    const { appointmentId } = req.params;
+
+    try {
+        // 1. Get consultation fees from the 'appointments' table
+        const [consultations] = await pool.query(
+            'SELECT "Consultation" AS item, consultation_fee AS cost FROM appointments WHERE id = ?',
+            [appointmentId]
+        );
+
+        // 2. Get medicine costs from the 'prescriptions' table
+        const [medicines] = await pool.query(
+            'SELECT details AS item, cost FROM prescriptions WHERE appointment_id = ?',
+            [appointmentId]
+        );
+
+        // 3. Get treatment costs from the 'treatments' table
+        const [treatments] = await pool.query(
+            'SELECT details AS item, cost FROM treatments WHERE appointment_id = ?',
+            [appointmentId]
+        );
+
+        // 4. Get allergy info (cost is 0, but good to list)
+         const [allergies] = await pool.query(
+            'SELECT details AS item, 0 AS cost FROM allergies WHERE appointment_id = ?',
+            [appointmentId]
+        );
+
+         // 5. Get diagnosis info (cost is 0, but good to list)
+         const [diagnoses] = await pool.query(
+            'SELECT details AS item, 0 AS cost FROM diagnoses WHERE appointment_id = ?',
+            [appointmentId]
+        );
+
+        // Combine all items into one bill
+        const itemizedBill = [...consultations, ...medicines, ...treatments, ...allergies, ...diagnoses];
+
+        // Calculate the total cost (only for items that have a cost)
+        const total = itemizedBill.reduce((sum, item) => sum + parseFloat(item.cost || 0), 0);
+
+        res.json({
+            items: itemizedBill,
+            total: total.toFixed(2)
+        });
+
+    } catch (err) {
+        console.error('Error generating bill:', err);
+        return res.status(500).json({ error: 'Database error occurred.' });
+    }
+});
 
 // ---------------- PRESCRIPTION ROUTES ----------------
 app.post('/api/prescriptions', async (req, res) => {

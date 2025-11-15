@@ -1,0 +1,169 @@
+/* --- START: DASHBOARD LAYOUT --- */
+
+/* Make the body a flex container to hold the sidebar and main content */
+body {
+    display: flex;
+    flex-direction: row; /* Arrange items side-by-side */
+    min-height: 100vh;
+    background-color: #f0f2f5;
+    font-family: Arial, sans-serif;
+    margin: 0;
+}
+
+/* The dark blue sidebar */
+.sidebar {
+    width: 260px;
+    background-color: #192A56;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.sidebar h2 {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.sidebar a {
+    color: white;
+    text-decoration: none;
+    padding: 15px 20px;
+    margin-bottom: 5px;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.sidebar a:hover {
+    background-color: #2c3e50;
+}
+
+.sidebar a.active {
+    background-color: #0056b3;
+    font-weight: bold;
+}
+
+.sidebar .bottom {
+    margin-top: auto;
+    font-size: 14px;
+}
+
+.sidebar .bottom .logout {
+    background-color: #e74c3c;
+    text-align: center;
+    font-weight: bold;
+}
+.sidebar .bottom .logout:hover {
+    background-color: #c0392b;
+}
+
+/* The main content area that holds your white card */
+.main-content {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* --- END: DASHBOARD LAYOUT --- */
+
+
+/* --- START: MAIN CONTENT STYLES --- */
+
+/* The Main Content Container (our white card) */
+.container {
+    width: 100%;
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 30px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+}
+
+/* Styling for Form Elements */
+h1 {
+    text-align: center;
+    color: #192A56;
+    margin-bottom: 20px;
+}
+
+label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+}
+
+/* This rule styles ALL of your inputs, textareas, AND dropdowns */
+input[type="text"],
+input[type="tel"],
+input[type="date"],
+input[type="time"],
+textarea,
+select {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 16px;
+    background-color: white;
+}
+
+textarea {
+    resize: vertical;
+}
+
+button {
+    width: 100%;
+    padding: 15px;
+    background-color: #0056b3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #004494;
+}
+
+#message {
+    text-align: center;
+    font-size: 1.1em;
+    font-weight: bold;
+    margin-top: 20px;
+}
+
+/* Styling for the Billing Table */
+#billTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+#billTable th,
+#billTable td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+#billTable thead th {
+    background-color: #f4f6f8;
+    font-weight: bold;
+}
+#billTable tfoot th {
+    font-size: 1.2em;
+    padding-top: 15px;
+}
+
+/* We don't need a footer on the dashboard */
+footer {
+    display: none;
+}

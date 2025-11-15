@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 3. Redirect (Your existing logic - UNCHANGED)
         setTimeout(() => {
           if (result.user.role === 'DOCTOR') {
-            window.location.href = '/web/public/doctor-patient-profile.html'; 
+            window.location.href = '/web/public/my-appointments.html'; 
           } else if (result.user.role === 'STAFF') {
             window.location.href = '/web/public/appointments.html'; 
           } 

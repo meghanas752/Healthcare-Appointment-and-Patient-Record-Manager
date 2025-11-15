@@ -80,6 +80,10 @@ async function fetchAppointments(doctorName) {
 /**
  * Renders the list of appointments on the page
  */
+// ***** REPLACE THIS FUNCTION in my-appointments.js *****
+
+// ***** REPLACE THIS FUNCTION in my-appointments.js *****
+
 function displayAppointments(appointments) {
   const listEl = document.getElementById('appointments-list');
   listEl.innerHTML = ''; // Clear the list
@@ -90,18 +94,19 @@ function displayAppointments(appointments) {
   }
 
   appointments.forEach(appt => {
-    const cardEl = document.createElement('div');
+    // ** THE FIX: Change from 'div' to 'a' (link) **
+    const cardEl = document.createElement('a'); 
     cardEl.className = 'appointment-card';
+    // ** THE FIX: Set the link to the new detail page **
+    // This will create a link like "appointment-detail.html?id=2"
+    cardEl.href = `appointment-detail.html?id=${appt.id}`; 
 
-    // Format the date
+    // ... (all your existing code for date, month, day, year, timeString, etc.) ...
     const date = new Date(appt.appointment_date);
     const month = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
     const day = date.getDate();
     const year = date.getFullYear();
-    
-    // Format the time
-    // ** THE FIX is on this line: **
-    const timeString = appt.appointment_time; // (was 'appontment_time')
+    const timeString = appt.appointment_time; 
     const [hours, minutes] = timeString.split(':');
     const time = new Date(year, date.getMonth(), day, hours, minutes);
     const formattedTime = time.toLocaleTimeString('en-US', {

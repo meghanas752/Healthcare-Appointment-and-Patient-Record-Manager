@@ -138,6 +138,114 @@ async function getAppointmentsByDoctorName(doctorName) {
   return rows;
 }
 
+
+
+// ***** ADD THIS NEW FUNCTION *****
+
+/**
+ * Fetches all details for a single appointment,
+ * including prescriptions and treatments.
+ */
+async function getAppointmentDetails(appointmentId) {
+  // 1. Get the main appointment info
+  const [apptRows] = await pool.query(
+    'SELECT * FROM appointments WHERE id = ?',
+    [appointmentId]
+  );
+  
+  if (apptRows.length === 0) {
+    throw new Error('Appointment not found.');
+  }
+  const appointment = apptRows[0];
+
+  // 2. Get all treatments for this appointment
+  const [treatments] = await pool.query(
+    'SELECT * FROM treatments WHERE appointment_id = ?',
+    [appointmentId]
+  );
+
+  // 3. Get all prescriptions for this appointment
+  const [prescriptions] = await pool.query(
+    'SELECT * FROM prescriptions WHERE appointment_id = ?',
+    [appointmentId]
+  );
+
+  // 4. Combine them into one object
+  return {
+    appointment,
+    treatments,
+    prescriptions
+  };
+}
+
+// ***** ADD THESE TWO NEW FUNCTIONS *****
+
+/**
+ * Fetches all details for a single appointment,
+ * including prescriptions and treatments.
+ */
+async function getAppointmentDetails(appointmentId) {
+  // 1. Get the main appointment info
+  const [apptRows] = await pool.query(
+    'SELECT * FROM appointments WHERE id = ?',
+    [appointmentId]
+  );
+  
+  if (apptRows.length === 0) {
+    throw new Error('Appointment not found.');
+  }
+  const appointment = apptRows[0];
+
+  // 2. Get all treatments for this appointment
+  const [treatments] = await pool.query(
+    'SELECT * FROM treatments WHERE appointment_id = ?',
+    [appointmentId]
+  );
+
+  // 3. Get all prescriptions for this appointment
+  const [prescriptions] = await pool.query(
+    'SELECT * FROM prescriptions WHERE appointment_id = ?',
+    [appointmentId]
+  );
+
+  // 4. Combine them into one object
+  return {
+    appointment,
+    treatments,
+    prescriptions
+  };
+}
+
+
+/**
+ * Creates a new prescription and links it to an appointment.
+ * (This REPLACES your old createPrescription function)
+ */
+async function createPrescription(appointmentId, details, cost) {
+  const [result] = await pool.query(
+    // Your new 'prescriptions' table has 'cost' and 'date'
+    'INSERT INTO prescriptions (appointment_id, details, cost, date) VALUES (?, ?, ?, CURDATE())',
+    [appointmentId, details, cost]
+  );
+  return { id: result.insertId };
+}
+
+
+// ***** ADD THIS NEW FUNCTION *****
+
+/**
+ * Creates a new treatment in the database.
+ */
+async function createTreatment(appointmentId, details, cost) {
+  const [result] = await pool.query(
+    // Your 'treatments' table has 'cost' and 'date'
+    'INSERT INTO treatments (appointment_id, details, cost, date) VALUES (?, ?, ?, CURDATE())',
+    [appointmentId, details, cost]
+  );
+  return { id: result.insertId };
+}
+
+
 // Export all functions at the very bottom
 module.exports = {
   pool,
@@ -148,5 +256,8 @@ module.exports = {
   createUser,                // <-- Now this function exists for your server
   incrementFailedAttempts,   // <-- And your new functions are here
   resetFailedAttempts,
-  getAppointmentsByDoctorName
+  getAppointmentsByDoctorName,
+  getAppointmentDetails,
+  createPrescription,
+  createTreatment
 };

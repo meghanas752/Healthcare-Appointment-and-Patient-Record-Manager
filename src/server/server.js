@@ -19,7 +19,10 @@ const {
   createUser,
   incrementFailedAttempts,
   resetFailedAttempts,
-  getAppointmentsByDoctorName // <-- THIS LINE IS ADDED
+  getAppointmentsByDoctorName,
+  getAppointmentDetails,
+  createTreatment
+  // <-- THIS LINE IS ADDED
 } = require('../backend/db.js'); 
 
 // --- 2. DEFINE THE APP (ONLY ONCE) ---
@@ -196,17 +199,67 @@ app.get('/api/billing/:appointmentId', async (req, res) => {
 });
 
 // ---------------- PRESCRIPTION ROUTES ----------------
+// ---------------- PRESCRIPTION ROUTES ----------------
 app.post('/api/prescriptions', async (req, res) => {
   try {
-    const { patientId, details } = req.body;
-    if (!patientId || !details) {
-      return res.status(400).json({ message: 'patientId and details are required.' });
+    // These now match your new table structure
+    const { appointmentId, details, cost } = req.body; 
+    
+    if (!appointmentId || !details) {
+      return res.status(400).json({ message: 'Appointment ID and details are required.' });
     }
-    const newPrescription = await createPrescription(patientId, details);
+    
+    // Pass all 3 values to the new function
+    const newPrescription = await createPrescription(appointmentId, details, cost || 10.00); // Default cost
+    
     res.status(201).json(newPrescription); 
+
   } catch (error) {
     console.error('Database error creating prescription:', error);
     res.status(500).json({ message: 'Error creating prescription.' });
+  }
+});
+
+
+// ---------------- TREATMENT ROUTES ----------------
+app.post('/api/treatments', async (req, res) => {
+  try {
+    // These match your 'treatments' table
+    const { appointmentId, details, cost } = req.body; 
+    
+    if (!appointmentId || !details) {
+      return res.status(400).json({ message: 'Appointment ID and details are required.' });
+    }
+    
+    // Call your new DB function
+    const newTreatment = await createTreatment(appointmentId, details, cost || 0.00); // Default cost
+    
+    res.status(201).json(newTreatment); 
+
+  } catch (error) {
+    console.error('Database error creating treatment:', error);
+    res.status(500).json({ message: 'Error creating treatment.' });
+  }
+});
+
+// ---------------- TREATMENT ROUTES ----------------
+app.post('/api/treatments', async (req, res) => {
+  try {
+    // These match your 'treatments' table
+    const { appointmentId, details, cost } = req.body; 
+    
+    if (!appointmentId || !details) {
+      return res.status(400).json({ message: 'Appointment ID and details are required.' });
+    }
+    
+    // Call your new DB function
+    const newTreatment = await createTreatment(appointmentId, details, cost || 0.00); // Default cost
+    
+    res.status(201).json(newTreatment); 
+
+  } catch (error) {
+    console.error('Database error creating treatment:', error);
+    res.status(500).json({ message: 'Error creating treatment.' });
   }
 });
 
@@ -325,6 +378,37 @@ app.get('/api/appointments/doctor/:name', async (req, res) => {
     res.status(500).json({ message: 'Error fetching appointments' });
   }
 });
+
+
+// ***** ADD THIS NEW ROUTE *****
+// ✅ Get all details for a SINGLE appointment
+app.get('/api/appointments/:id/details', async (req, res) => {
+  try {
+    const appointmentId = req.params.id;
+    const details = await getAppointmentDetails(appointmentId);
+    res.json(details);
+  } catch (error) {
+    console.error('Error fetching appointment details:', error);
+    res.status(500).json({ message: 'Error fetching details' });
+  }
+});
+
+
+app.get('/api/appointments/:id/details', async (req, res) => {
+  try {
+    const appointmentId = req.params.id;
+    const details = await getAppointmentDetails(appointmentId);
+    res.json(details);
+  } catch (error) {
+    console.error('Error fetching appointment details:', error);
+    // Handle "Not Found" error from db.js
+    if (error.message === 'Appointment not found.') {
+      return res.status(404).json({ message: error.message });
+    }
+    res.status(500).json({ message: 'Error fetching details' });
+  }
+});
+
 
 // ✅ Add a new appointment
 // ✅ Add a new appointment (with email + contact)

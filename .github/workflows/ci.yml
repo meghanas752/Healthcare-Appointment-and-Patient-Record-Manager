@@ -1,40 +1,171 @@
-# .github/workflows/ci.yml
-
 name: Node.js CI
 
-# This tells GitHub WHEN to run this script.
-# We want it to run on every Pull Request to the 'main' branch.
 on:
+  push:
+    branches: ["main", "develop"]
   pull_request:
-    branches: [ "main","develop" ]
+    branches: ["main", "develop"]
 
-# This defines the "job" or set of tasks to run.
 jobs:
-  build-and-test:
-    # The type of computer to run on (a fresh Linux machine)
+  # -----------------------------------------------------
+  # 1️⃣ BUILD STAGE
+  # -----------------------------------------------------
+  build:
     runs-on: ubuntu-latest
 
-    # The steps the robot will follow in order
     steps:
-    # 1. Checks out your branch's code so it can be tested
-    - name: Check out code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    # 2. Installs Node.js version 18
-    - name: Use Node.js 18
-      uses: actions/setup-node@v4
-      with:
-        node-version: 18
-        cache: 'npm' # This speeds up future builds
-        cache-dependency-path: src/backend/package-lock.json
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: src/server/package-lock.json
 
-    # 3. Installs all your project's packages
-    - name: Install dependencies
-      run: npm install
-      working-directory: ./src/backend # Tells it to run in the backend folder
+      - name: Install Backend Dependencies
+        working-directory: src/server
+        run: npm install
 
-    # 4. Runs the "test" script from your package.json
-    # Because we made it "exit 0", this step will pass!
-    - name: Run tests
-      run: npm test
-      working-directory: ./src/backend
+  # -----------------------------------------------------
+  # 2️⃣ TEST STAGE
+  # -----------------------------------------------------
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        working-directory: src/server
+        run: npm install
+
+      - name: Run Tests
+        working-directory: src/server
+        run: npm test
+
+  # -----------------------------------------------------
+  # 3️⃣ COVERAGE STAGE (75% requirement)
+  # -----------------------------------------------------
+  coverage:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        working-directory: src/server
+        run: npm install
+
+      - name: Run Coverage
+        working-directory: src/server
+        run: |
+          npm run coverage
+          echo "Checking if coverage meets 75% requirement"
+          THRESHOLD=75
+          TOTAL=$(jq '.total.lines.pct' coverage/coverage-summary.json)
+          echo "Coverage is $TOTAL%"
+          if (( $(echo "$TOTAL < $THRESHOLD" | bc -l) )); then
+            echo "Coverage below required threshold!"
+            exit 1
+          fi
+
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: src/server/coverage/
+
+  # -----------------------------------------------------
+  # 4️⃣ LINT STAGE (ESLint Score Requirement)
+  # -----------------------------------------------------
+  lint:
+    needs: coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        working-directory: src/server
+        run: npm install
+
+      - name: Run ESLint
+        working-directory: src/server
+        run: |
+          npm run lint || true
+          npm run lint > lint-report.txt || true
+
+      - name: Upload Lint Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: lint-report
+          path: src/server/lint-report.txt
+
+  # -----------------------------------------------------
+  # 5️⃣ SECURITY SCAN STAGE (npm audit)
+  # -----------------------------------------------------
+  security:
+    needs: lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        working-directory: src/server
+        run: npm install
+
+      - name: Run Security Scan
+        working-directory: src/server
+        run: |
+          npm audit --json > security-report.json || true
+
+      - name: Upload Security Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-report
+          path: src/server/security-report.json
+
+  # -----------------------------------------------------
+  # 6️⃣ DEPLOYMENT ARTIFACT (ZIP)
+  # -----------------------------------------------------
+  deploy:
+    needs: [build, test, coverage, lint, security]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts/
+
+      - name: Create Deployment Package
+        run: |
+          mkdir -p deployment
+          cp -r src/server deployment/backend
+          cp -r artifacts/ deployment/reports
+          cp README.md deployment/
+          cd deployment
+          zip -r ../HMPRS-Deployment.zip .
+
+      - name: Upload Deployment Package
+        uses: actions/upload-artifact@v3
+        with:
+          name: HMPRS-Deployment
+          path: HMPRS-Deployment.zip

@@ -31,10 +31,10 @@ jobs:
     # 3. Installs all your project's packages
     - name: Install dependencies
       run: npm install
-      working-directory: ./src/backend # Tells it to run in the backend folder
+      working-directory: ./ # Tells it to run in the backend folder
 
     # 4. Runs the "test" script from your package.json
     # Because we made it "exit 0", this step will pass!
     - name: Run tests
       run: npm test
-      working-directory: ./src/backend
+      working-directory: ./

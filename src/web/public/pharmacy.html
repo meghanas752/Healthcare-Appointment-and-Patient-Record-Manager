@@ -22,21 +22,37 @@
     </table>
 
     <div class="actions">
+      <!-- RESTOCK FORM -->
       <form id="restock-form">
         <h3>Restock Medicine</h3>
         <input type="text" id="restock_code" placeholder="Drug Code" required />
         <input type="number" id="restock_qty" placeholder="Quantity" required />
+        <input type="number" id="restock_price" placeholder="Price (per unit)" required />
         <button type="submit">Restock</button>
       </form>
 
+      <!-- DISPENSE FORM -->
       <form id="dispense-form">
         <h3>Dispense Medicine</h3>
         <input type="text" id="dispense_code" placeholder="Drug Code" required />
         <input type="number" id="dispense_qty" placeholder="Quantity" required />
-        <input type="number" id="ref_id" placeholder="Prescription ID (optional)" />
+        <input type="number" id="ref_id" placeholder="Prescription ID" required />
         <button type="submit">Dispense</button>
       </form>
     </div>
+
+    <!-- FINAL BILL GENERATOR -->
+    <div class="bill-section" style="margin-top:40px;">
+      <h3>Generate Final Bill</h3>
+
+      <!-- ⭐ Corrected: uses Prescription ID, not Patient ID -->
+      <input type="number" id="prescription_id_bill" placeholder="Enter Prescription ID" />
+
+      <button id="generate_bill_btn">Generate Bill</button>
+
+      <div id="bill_output" style="margin-top:20px;"></div>
+    </div>
+
   </div>
 
   <script src="pharmacy.js"></script>

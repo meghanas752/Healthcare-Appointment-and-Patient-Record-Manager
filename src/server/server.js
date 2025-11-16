@@ -279,12 +279,17 @@ app.post('/api/appointments', async (req, res) => {
   try {
     const { 
       patient_name, 
-      patient_email,        // ⭐ ADDED
-      patient_contact,      // ⭐ ADDED
+      patient_email,
+      patient_contact,
       doctor_name, 
       appointment_date, 
       appointment_time 
     } = req.body;
+
+    // ⭐ REQUIRED VALIDATION ⭐
+    if (!patient_name || !doctor_name || !appointment_date || !appointment_time) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
 
     const [result] = await pool.query(
       `INSERT INTO appointments 
@@ -296,8 +301,8 @@ app.post('/api/appointments', async (req, res) => {
     const newAppointment = {
       id: result.insertId,
       patient_name,
-      patient_email,       // ⭐ ADDED
-      patient_contact,     // ⭐ ADDED
+      patient_email,
+      patient_contact,
       doctor_name,
       appointment_date,
       appointment_time,
@@ -310,6 +315,7 @@ app.post('/api/appointments', async (req, res) => {
     res.status(500).json({ message: 'Error creating appointment' });
   }
 });
+
 
 
 // ✅ Delete an appointment by ID

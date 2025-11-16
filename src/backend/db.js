@@ -62,17 +62,6 @@ async function getPatientHistoryByName(patientName) {
   return { patient, history };
 }
 
-/**
- * Creates a new prescription in the database.
- */
-async function createPrescription(patientId, details) {
-  const [result] = await pool.query(
-    'INSERT INTO prescriptions (patientId, date, details) VALUES (?, CURDATE(), ?)',
-    [patientId, details]
-  );
-  return { id: result.insertId };
-}
-
 
 // ***** NEW FUNCTION FOR LOGIN *****
 /**
@@ -136,46 +125,6 @@ async function getAppointmentsByDoctorName(doctorName) {
     [doctorName]
   );
   return rows;
-}
-
-
-
-// ***** ADD THIS NEW FUNCTION *****
-
-/**
- * Fetches all details for a single appointment,
- * including prescriptions and treatments.
- */
-async function getAppointmentDetails(appointmentId) {
-  // 1. Get the main appointment info
-  const [apptRows] = await pool.query(
-    'SELECT * FROM appointments WHERE id = ?',
-    [appointmentId]
-  );
-  
-  if (apptRows.length === 0) {
-    throw new Error('Appointment not found.');
-  }
-  const appointment = apptRows[0];
-
-  // 2. Get all treatments for this appointment
-  const [treatments] = await pool.query(
-    'SELECT * FROM treatments WHERE appointment_id = ?',
-    [appointmentId]
-  );
-
-  // 3. Get all prescriptions for this appointment
-  const [prescriptions] = await pool.query(
-    'SELECT * FROM prescriptions WHERE appointment_id = ?',
-    [appointmentId]
-  );
-
-  // 4. Combine them into one object
-  return {
-    appointment,
-    treatments,
-    prescriptions
-  };
 }
 
 // ***** ADD THESE TWO NEW FUNCTIONS *****

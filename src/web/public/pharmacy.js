@@ -22,12 +22,21 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // ✅ FIXED: Restock must send price also
     restockForm.addEventListener("submit", e => {
       e.preventDefault();
+
       const body = {
-        drug_code: restockForm.restock_code.value,
-        qty: parseInt(restockForm.restock_qty.value)
+        drug_code: restockForm.restock_code.value.trim(),
+        qty: parseInt(restockForm.restock_qty.value),
+        price: parseFloat(restockForm.restock_price.value)   // ⭐ ADDED
       };
+
+      if (!body.drug_code || !body.qty || !body.price) {
+        alert("drug_code, qty and price are required");
+        return;
+      }
+
       fetch("/pharmacy/restock", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -38,13 +47,20 @@ document.addEventListener("DOMContentLoaded", () => {
         .then(loadInventory);
     });
 
+    // ❌ BUG IN YOUR CODE:
+    // You were incorrectly reading price from restockForm instead of dispense form
+    // ❌ price: parseFloat(restockForm.restock_price.value),
+
+    // ✅ FIXED DISPENSE
     dispenseForm.addEventListener("submit", e => {
       e.preventDefault();
+
       const body = {
-        drug_code: dispenseForm.dispense_code.value,
+        drug_code: dispenseForm.dispense_code.value.trim(),
         qty: parseInt(dispenseForm.dispense_qty.value),
         ref_id: dispenseForm.ref_id.value || null
       };
+
       fetch("/pharmacy/dispense", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -55,5 +71,29 @@ document.addEventListener("DOMContentLoaded", () => {
         .then(loadInventory);
     });
 
+    document.getElementById("generate_bill_btn").addEventListener("click", () => {
+      const pid = document.getElementById("patient_id_bill").value;
+      if (!pid) return alert("Enter Patient ID");
+
+      fetch(`/pharmacy/final-bill/${pid}`)
+        .then(res => res.json())
+        .then(data => {
+          let html = "<h3>Bill Summary</h3>";
+          html += "<table><tr><th>Drug</th><th>Qty</th><th>Price</th><th>Total</th></tr>";
+
+          data.items.forEach(i => {
+            html += `<tr>
+                <td>${i.drug_code}</td>
+                <td>${i.qty}</td>
+                <td>${i.unit_price}</td>
+                <td>${i.total}</td>
+            </tr>`;
+          });
+
+          html += `</table><h2>Total Bill Amount: Rs ${data.total}</h2>`;
+          document.getElementById("bill_output").innerHTML = html;
+        });
+    });
+
     loadInventory();
-  });
+});

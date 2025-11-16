@@ -26,6 +26,7 @@
         <h3>Restock Medicine</h3>
         <input type="text" id="restock_code" placeholder="Drug Code" required />
         <input type="number" id="restock_qty" placeholder="Quantity" required />
+        <input type="number" id="restock_price" placeholder="Price (per unit)" required />
         <button type="submit">Restock</button>
       </form>
 
@@ -37,6 +38,16 @@
         <button type="submit">Dispense</button>
       </form>
     </div>
+
+    <!-- ⭐ STEP 7: Final Bill Generator UI -->
+    <div class="bill-section" style="margin-top:40px;">
+      <h3>Generate Final Bill</h3>
+      <input type="number" id="patient_id_bill" placeholder="Enter Patient ID" />
+      <button id="generate_bill_btn">Generate Bill</button>
+
+      <div id="bill_output" style="margin-top:20px;"></div>
+    </div>
+
   </div>
 
   <script src="pharmacy.js"></script>

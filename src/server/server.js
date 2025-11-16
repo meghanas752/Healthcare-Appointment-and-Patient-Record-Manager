@@ -382,6 +382,9 @@ app.delete('/api/appointments/:id', async (req, res) => {
 
 
 //pharmacy inventory
+// ---------------- PHARMACY ROUTES ----------------
+
+// GET all inventory items
 app.get("/pharmacy/inventory", async (req, res) => {
   try {
     const [rows] = await pool.query("SELECT * FROM inventory_items");
@@ -392,19 +395,25 @@ app.get("/pharmacy/inventory", async (req, res) => {
   }
 });
 
+
+// ✅ RESTOCK MEDICINE (original correct version)
 app.post("/pharmacy/restock", async (req, res) => {
   try {
-    const { drug_code, qty } = req.body;
-    if (!drug_code || !qty || qty <= 0) {
-      return res.status(400).send("drug_code and positive qty are required");
+    const { drug_code, qty, price } = req.body;
+
+    if (!drug_code || !qty || qty <= 0 || price === undefined || price < 0) {
+      return res.status(400).send("drug_code, qty and price are required");
     }
-   // 1) ensure the item exists
+
+    // 1) Ensure the item exists
     await pool.query(
-      "INSERT IGNORE INTO inventory_items (drug_code, drug_name, stock, updated_at) VALUES (?, ?, 0, NOW())",
-      [drug_code, drug_code] // use code as name if you don't have one
+      `INSERT INTO inventory_items (drug_code, drug_name, stock, price, updated_at)
+       VALUES (?, ?, 0, ?, NOW())
+       ON DUPLICATE KEY UPDATE price = VALUES(price)`,
+      [drug_code, drug_code, price]
     );
 
-    // 2) add stock
+    // 2) Add stock
     const [upd] = await pool.query(
       "UPDATE inventory_items SET stock = stock + ?, updated_at = NOW() WHERE drug_code = ?",
       [qty, drug_code]
@@ -414,9 +423,10 @@ app.post("/pharmacy/restock", async (req, res) => {
       return res.status(404).send("Drug code not found");
     }
 
-     // 3) log movement (reason/type consistent)
+    // 3) Log movement
     await pool.query(
-      "INSERT INTO inventory_moves (drug_code, qty, reason, ref_type, type, reference_id) VALUES (?, ?, 'RESTOCK', 'MANUAL', 'RESTOCK', NULL)",
+      `INSERT INTO inventory_moves (drug_code, qty, reason, ref_type, type, reference_id)
+       VALUES (?, ?, 'RESTOCK', 'MANUAL', 'RESTOCK', NULL)`,
       [drug_code, qty]
     );
 
@@ -426,40 +436,86 @@ app.post("/pharmacy/restock", async (req, res) => {
     res.status(500).send("Error restocking medicine");
   }
 });
+
+
+// ✅ DISPENSE MEDICINE (original working)
 app.post("/pharmacy/dispense", async (req, res) => {
   try {
     const { drug_code, qty, ref_id } = req.body;
+
     if (!drug_code || !qty || qty <= 0) {
       return res.status(400).send("drug_code and positive qty are required");
     }
 
-    // 1) check current stock
     const [[item]] = await pool.query(
-      "SELECT stock FROM inventory_items WHERE drug_code = ?",
+      "SELECT stock, price FROM inventory_items WHERE drug_code = ?",
       [drug_code]
     );
+
     if (!item) return res.status(404).send("Drug code not found");
     if (item.stock < qty) return res.status(400).send("Insufficient stock");
 
-    // 2) reduce stock
+    // Reduce stock
     await pool.query(
       "UPDATE inventory_items SET stock = stock - ?, updated_at = NOW() WHERE drug_code = ?",
       [qty, drug_code]
     );
 
-    // 3) log movement; ref_type derived from presence of ref_id
     const refType = ref_id ? "PRESCRIPTION" : "MANUAL";
+
+    // log movement with unit price
     await pool.query(
-      "INSERT INTO inventory_moves (drug_code, qty, reason, ref_type, type, reference_id) VALUES (?, ?, 'DISPENSE', ?, 'DISPENSE', ?)",
-      [drug_code, qty, refType, ref_id || null]
+      `INSERT INTO inventory_moves (drug_code, qty, reason, ref_type, type, reference_id, unit_price)
+      VALUES (?, ?, 'DISPENSE', ?, 'DISPENSE', ?, ?)`,
+      [drug_code, qty, refType, ref_id || null, item.price]
     );
 
-      res.send("Medicine dispensed!");
+    res.send("Medicine dispensed!");
   } catch (err) {
     console.error("Error dispensing:", err);
     res.status(500).send("Error dispensing medicine");
   }
 });
+
+
+// ✅ FINAL BILL
+app.get("/pharmacy/final-bill/:patientId", async (req, res) => {
+  try {
+    const pid = req.params.patientId;
+
+    const [rows] = await pool.query(
+      `SELECT drug_code, qty, unit_price, (qty * unit_price) AS total
+       FROM inventory_moves 
+       WHERE reference_id = ? AND type = 'DISPENSE'`,
+      [pid]
+    );
+
+    const total_bill = rows.reduce((sum, r) => sum + r.total, 0);
+
+    res.json({
+      items: rows,
+      total: total_bill
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Could not generate bill");
+  }
+});
+
+
+// ✅ Get all patientIds (reference IDs) for billing dropdown
+app.get("/pharmacy/ref-ids", async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT DISTINCT reference_id FROM inventory_moves WHERE type='DISPENSE' AND reference_id IS NOT NULL"
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Could not load reference IDs");
+  }
+});
+
 
 
 

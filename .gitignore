@@ -44,3 +44,5 @@ pnpm-debug.log
 # Auto-generated files from macOS (.DS_Store) and Windows (Thumbs.db).
 .DS_Store
 Thumbs.db
+
+coverage/

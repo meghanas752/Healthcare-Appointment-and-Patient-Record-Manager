@@ -1,4 +1,3 @@
-// tests/prescriptions.spec.js
 const request = require('supertest');
 const app = require('../src/server/server.js');
 const { pool } = require('../src/backend/db.js');
@@ -8,6 +7,8 @@ process.env.NODE_ENV = 'test';
 describe('POST /api/prescriptions', () => {
 
   let newPrescriptionId;
+  // We use a valid appointment_id from your database (e.g., ID 2 for 'megha')
+  const testAppointmentId = 2; 
 
   // After all tests, clean up the prescription we created
   afterAll(async () => {
@@ -21,9 +22,9 @@ describe('POST /api/prescriptions', () => {
     const response = await request(app)
       .post('/api/prescriptions')
       .send({
-        patientId: 1, // John Doe
-        details: 'Test: Ibuprofen 800mg'
-        // We don't send doctorId, as it's not in the 'prescriptions' table schema
+        appointmentId: testAppointmentId,
+        details: 'Test: Paracetamol 500mg',
+        cost: 15.75
       });
 
     expect(response.statusCode).toBe(201); // 201 Created
@@ -33,14 +34,16 @@ describe('POST /api/prescriptions', () => {
     newPrescriptionId = response.body.id; 
   });
 
-  test('should return 400 for missing required fields', async () => {
+  test('should return 400 for missing details', async () => {
     const response = await request(app)
       .post('/api/prescriptions')
       .send({
-        patientId: 1 // Missing details
+        appointmentId: testAppointmentId, // Missing details
+        cost: 10.00
       });
 
     expect(response.statusCode).toBe(400);
-    expect(response.body.message).toBe('patientId and details are required.');
+    // This message matches the logic we built for your server
+    expect(response.body.message).toBe('Appointment ID and details are required.');
   });
 });

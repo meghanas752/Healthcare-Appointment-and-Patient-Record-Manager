@@ -69,7 +69,7 @@ jobs:
           DB_USER: root
           DB_PASSWORD: root
           DB_NAME: hms_test
-        run: npm test -- --coverage --watchAll=false
+          run: npm test -- --coverage --watchAll=false --runInBand --forceExit
 
       # 7. Upload Coverage Report
       - name: Upload Coverage Report

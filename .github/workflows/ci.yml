@@ -10,14 +10,14 @@ jobs:
   build-test:
     name: Build & Test Backend
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
-    # Start a MySQL DB inside the CI runner
     services:
       mysql:
         image: mysql:8
         env:
-          MYSQL_ROOT_PASSWORD: root      # CI-only password
-          MYSQL_DATABASE: hms_test       # CI-only DB
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: hms_test
         ports:
           - 3306:3306
         options: >-
@@ -27,39 +27,23 @@ jobs:
           --health-retries=10
 
     steps:
-      # 1. Checkout code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Setup Node.js
       - name: Use Node.js 18
         uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: npm
 
-      # 3. Install dependencies
       - name: Install dependencies
         run: npm ci
 
-      # 4. (Optional) Debug info
-      - name: Debug env
-        run: |
-          node -v
-          npm -v
-          ls
-
-      # 5. (OPTIONAL but recommended) – if you have a SQL schema file, import it here
-      #    Replace `path/to/schema.sql` with your actual file (for example: db/schema.sql)
-  
-      - name: Initialize DB schema (optional)
+      - name: Initialize DB schema
         run: |
           sudo apt-get update
           sudo apt-get install -y mysql-client
-          # Uncomment and fix the path below if you have a schema SQL file in your repo:
           mysql -h 127.0.0.1 -P 3306 -u root -proot hms_test < src/server/db/schema.sql
-
-      # 6. Run Jest Tests with Coverage
 
       - name: Run Jest tests
         env:
@@ -69,15 +53,14 @@ jobs:
           DB_USER: root
           DB_PASSWORD: root
           DB_NAME: hms_test
-          run: npm test -- --coverage --watchAll=false --runInBand --forceExit
+        run: npm test -- --coverage --watchAll=false --runInBand --forceExit
 
-      # 7. Upload Coverage Report
       - name: Upload Coverage Report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage/
 
-      #8. Run ESLint (Optional)
       - name: Run ESLint
         run: npm run lint || true

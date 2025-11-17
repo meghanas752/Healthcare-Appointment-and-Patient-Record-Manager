@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>HMPRS — Login</title>
+  <link rel="stylesheet" href="login1.css" />
+</head>
+<body>
+  <div class="login-container">
+    <h1>Secure User Login</h1>
+    <form id="loginForm">
+      <label for="identifier">Username or Email</label>
+      <input id="identifier" name="identifier" type="text" required />
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" required />
+      <button type="submit">Login</button>
+    </form>
+    <div class="signup-link">
+      <p>Don't have an account? <a href="/web/public/signup.html">Sign up here</a></p>
+    </div>
+    
+    <div id="fail-counter-card" class="fail-counter hidden">
+      <span id="fail-count">0</span> failed attempts. 5 strikes locks your account.
+    </div>
+    <div id="message" class="msg"></div>
+  </div>
+
+  <script src="login1.js"></script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+
+
+
+body {
+  font-family: "Segoe UI", sans-serif;
+  background: #f9fbfd;
+  margin: 0;
+  padding: 0;
+}
+
+.pharmacy-container {
+  width: 85%;
+  margin: 40px auto;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  padding: 30px;
+}
+
+h1 {
+  text-align: center;
+  color: #0077aa;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th {
+  background-color: #0077aa;
+  color: white;
+  padding: 10px;
+  text-align: left;
+}
+
+td {
+  border-bottom: 1px solid #ddd;
+  padding: 8px;
+}
+
+.actions {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 30px;
+}
+
+form {
+  background: #f4f8fb;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+form h3 {
+  color: #0077aa;
+  margin-bottom: 10px;
+}
+
+input {
+  margin: 5px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+button {
+  background: #0077aa;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #005f88;
+}

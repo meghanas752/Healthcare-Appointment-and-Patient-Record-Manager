@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Appointments</title>
+  <!-- Re-use the same CSS files -->
+  <link rel="stylesheet" href="css/history.css">
+  <link rel="stylesheet" href="css/my-appointments.css"> <!-- New CSS file -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+  <!-- 1. The Sidebar (Copied from your dashboard) -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <i class="fas fa-hospital"></i>
+      <h3>HMPRS</h3>
+    </div>
+    <ul class="sidebar-nav">
+      <!-- UPDATE THE ACTIVE STATE -->
+      <!-- <li><a href="doctor-patient-profile.html"><i class="fas fa-search"></i> Search Patient</a></li> -->
+      <!-- <li><a href="#"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li> -->
+      <li><a href="my-appointments.html"><i class="fas fa-calendar-check"></i> My Appointments</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <p>Signed in as</p>
+      <strong>Dr. Megha</strong> <!-- This will be replaced by JS -->
+      <a href="#" id="logout-button">Logout</a>
+    </div>
+  </div>
+
+  <!-- 2. The Main Content Area -->
+  <div class="main-content">
+    
+    <!-- Header -->
+    <div class="content-header">
+      <h1>My Appointments</h1>
+      <p>A complete list of your upcoming and past appointments.</p>
+    </div>
+
+    <!-- Appointments List -->
+    <div class="appointments-container">
+      <div id="loading-message">Loading appointments...</div>
+      <div id="appointments-list">
+        <!-- Appointment cards will be injected here by JavaScript -->
+      </div>
+    </div>
+
+  </div> <!-- /main-content -->
+
+  <!-- Use a NEW JavaScript file -->
+  <script src="scripts/my-appointments.js"></script>
+</body>
+</html>

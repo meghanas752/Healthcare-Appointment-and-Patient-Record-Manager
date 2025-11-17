@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale-1.0">
+  <title>Doctor Schedule Search</title>
+  
+  <!-- RE-USE YOUR EXISTING CSS FILES -->
+  <!-- 1. For the sidebar and basic layout (from your appointments.html) -->
+  <link rel="stylesheet" href="appointments.css"> 
+  
+  <!-- 2. For the beautiful card layout (from your my-appointments.html) -->
+  <!-- This path assumes my-appointments.css is in src/web/css/ -->
+  <link rel="stylesheet" href="css/my-appointments.css"> 
+  
+  <!-- 3. For the search bar styles (from your doctor-patient-profile.html) -->
+  <!-- This path assumes history.css is in src/web/css/ -->
+  <link rel="stylesheet" href="css/history.css"> 
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+  <!-- 1. The Staff Sidebar (based on your screenshot) -->
+  <div class="sidebar">
+    <h2>HMPRS</h2>
+    <a href="appointments.html" > My Appointments</a>
+    <div class="bottom">
+      <p>Signed in as<br><strong id="loggedUser"></strong></p>
+      <strong id="staff-name-display">Staff Member</strong> <!-- JS will update this -->
+
+      
+    </div>
+  </div>
+    
+
+  <!-- 2. The Main Content Area -->
+  <div class="main-content">
+    <div class="content-header">
+      <h1>Search Doctor Schedule</h1>
+      <p>Enter a doctor's name to see their complete appointment list.</p>
+       <div class="search-container">
+        <input type="text" id="doctor-name-input" placeholder="Enter doctor's username (e.g., 'megh', 'alice')...">
+        <button id="search-button"><i class="fas fa-search"></i> Search</button>
+      </div>
+    </div>
+    
+    
+   
+    <!-- Appointments List (re-using styles from my-appointments.css) -->
+    <div class="appointments-container">
+      <div id="loading-message"></div>
+      <div id="appointments-list">
+        <!-- Appointment cards will be injected here by JavaScript -->
+      </div>
+    </div>
+
+  </div> <!-- /main-content -->
+
+  <!-- Use a NEW JavaScript file -->
+  <script src="scripts/staff-schedule.js"></script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appointment Details</title>
+  <!-- Re-use the same CSS files -->
+  <link rel="stylesheet" href="css/history.css">
+  <link rel="stylesheet" href="css/my-appointments.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+  <!-- 1. The Sidebar (Copied from your dashboard) -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <i class="fas fa-hospital"></i>
+      <h3>HMPRS</h3>
+    </div>
+    <ul class="sidebar-nav">
+      <!-- Make "My Appointments" the active link -->
+      <li class="active"><a href="my-appointments.html"><i class="fas fa-calendar-check"></i> My Appointments</a></li>
+      <!-- <li><a href="#"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li> -->
+      <!-- (We can hide the old "Search Patient" link now) -->
+      <!-- <li><a href="doctor-patient-profile.html"><i class="fas fa-search"></i> Search Patient</a></li> -->
+    </ul>
+    <div class="sidebar-footer">
+      <p>Signed in as</p>
+      <strong id="doctor-name-display">Doctor</strong> <!-- JS will update this -->
+      <a href="#" id="logout-button">Logout</a>
+    </div>
+  </div>
+
+  <!-- 2. The Main Content Area -->
+  <div class="main-content">
+    
+    <!-- Header -->
+    <div class="content-header">
+      <h1 id="patient-name-header">Loading...</h1>
+      <p id="appointment-date-header"></p>
+      <!-- <a href="my-appointments.html" class="back-link">&larr; Back to All Appointments</a> -->
+    </div>
+
+    <!-- Loading Message -->
+    <div id="loading-message">Loading details...</div>
+    
+    <div id="details-container" class="hidden">
+      <!-- Treatments List -->
+      <div class="history-section">
+        <h3>Treatments Recorded</h3>
+        <div id="treatments-list">
+          <!-- Treatment items will be injected here by JavaScript -->
+        </div>
+      </div>
+      <!-- ******* ADD THIS NEW SECTION ******* -->
+      <div id="treatment-section" class="history-section" style="margin-top: 30px;">
+        <h3>Add New Treatment</h3>
+        <form id="treatment-form">
+          <div class="form-group">
+            <label for="treatment-details">Treatment Details (e.g., "Routine Checkup")</label>
+            <textarea id="treatment-details" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="treatment-cost">Cost (e.g., 50.00)</label>
+            <input type="number" id="treatment-cost" step="0.01" min="0" placeholder="50.00">
+          </div>
+          <button type="submit" class="submit-button">Save Treatment</button>
+          <div id="treatment-message" class="hidden"></div>
+        </form>
+      </div>
+
+      <!-- Prescriptions List -->
+      <div class="history-section" style="margin-top: 30px;">
+        <h3>Prescriptions Issued</h3>
+        <div id="prescriptions-list">
+          <!-- Prescription items will be injected here by JavaScript -->
+        </div>
+      </div>
+
+      <!-- **** THIS IS YOUR NEW FORM **** -->
+      <div id="prescription-section" class="history-section" style="margin-top: 30px;">
+        <h3>Add New Prescription</h3>
+        <form id="prescription-form">
+          <div class="form-group">
+            <label for="prescription-details">Prescription Details (e.g., "Amoxicillin 500mg")</label>
+            <textarea id="prescription-details" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="prescription-cost">Cost (e.g., 15.50)</label>
+            <input type="number" id="prescription-cost" step="0.01" min="0" placeholder="10.00">
+          </div>
+          <button type="submit" class="submit-button">Save Prescription</button>
+          <div id="prescription-message" class="hidden"></div>
+        </form>
+      </div>
+      <!-- **** END OF NEW FORM **** -->
+    </div>
+
+  </div> <!-- /main-content -->
+
+  <!-- Use a NEW JavaScript file -->
+  <script src="scripts/appointment-detail.js"></script>
+</body>
+</html>

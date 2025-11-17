@@ -1,12 +1,48 @@
 # .gitignore
 
+# ----------------------------------------------------------------
 # Dependencies
+# ----------------------------------------------------------------
+# The node_modules folder contains all the downloaded packages.
+# It can be huge and should never be committed.
 /node_modules
 /src/backend/node_modules
+/src/server/node_modules
 
-# Environment variables
+
+# ----------------------------------------------------------------
+# Environment Variables & Secrets
+# ----------------------------------------------------------------
+# These files contain passwords, API keys, etc.
+# NEVER commit these to version control for security reasons.
 .env
 /src/backend/.env
+/src/server/.env
 
+
+# ----------------------------------------------------------------
 # Log files
+# ----------------------------------------------------------------
+# Log files are generated during runtime and can be very large.
 npm-debug.log*
+yarn-error.log
+pnpm-debug.log
+
+
+# ----------------------------------------------------------------
+# IDE & Editor Directories
+# ----------------------------------------------------------------
+# These folders are created by code editors like VS Code and
+# contain user-specific settings, not project code.
+.vscode/
+.idea/
+
+
+# ----------------------------------------------------------------
+# Operating System Files
+# ----------------------------------------------------------------
+# Auto-generated files from macOS (.DS_Store) and Windows (Thumbs.db).
+.DS_Store
+Thumbs.db
+
+coverage/

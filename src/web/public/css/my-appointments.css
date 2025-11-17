@@ -1,0 +1,84 @@
+/* src/web/css/my-appointments.css */
+
+.appointments-container {
+  max-width: 900px;
+}
+
+#loading-message {
+  text-align: center;
+  color: #555;
+  font-size: 1.1rem;
+  padding: 30px;
+}
+
+.appointment-card {
+  text-decoration: none;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+  display: flex;
+  overflow: hidden; /* To make the date bar look good */
+}
+
+.appointment-date-bar {
+  flex: 0 0 100px; /* Don't grow, don't shrink, start at 100px */
+  background-color: #3498db;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  text-align: center;
+}
+
+.appointment-date-month {
+  font-size: 1rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.appointment-date-day {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.appointment-date-year {
+  font-size: 1rem;
+  opacity: 0.8;
+}
+
+.appointment-details {
+  padding: 20px;
+  flex-grow: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.appointment-info h4 {
+  font-size: 1.25rem;
+  color: #333;
+  margin-bottom: 5px;
+}
+.appointment-info h4 i {
+  margin-right: 8px;
+  color: #555;
+}
+
+.appointment-info p {
+  font-size: 1rem;
+  color: #555;
+  margin: 0;
+}
+
+.appointment-time {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #3498db;
+  text-align: right;
+  min-width: 120px;
+}

@@ -1,40 +1,67 @@
-# .github/workflows/ci.yml
+name: HMS CI Pipeline
 
-name: Node.js CI
-
-# This tells GitHub WHEN to run this script.
-# We want it to run on every Pull Request to the 'main' branch.
 on:
+  push:
+    branches: [ "main", "develop" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "develop" ]
 
-# This defines the "job" or set of tasks to run.
 jobs:
-  build-and-test:
-    # The type of computer to run on (a fresh Linux machine)
+  build-test:
+    name: Build & Test Backend
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
-    # The steps the robot will follow in order
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: hms_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
     steps:
-    # 1. Checks out your branch's code so it can be tested
-    - name: Check out code
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    # 2. Installs Node.js version 18
-    - name: Use Node.js 18
-      uses: actions/setup-node@v4
-      with:
-        node-version: 18
-        cache: 'npm' # This speeds up future builds
-        cache-dependency-path: src/backend/package-lock.json
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
 
-    # 3. Installs all your project's packages
-    - name: Install dependencies
-      run: npm install
-      working-directory: ./src/backend # Tells it to run in the backend folder
 
-    # 4. Runs the "test" script from your package.json
-    # Because we made it "exit 0", this step will pass!
-    - name: Run tests
-      run: npm test
-      working-directory: ./src/backend
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Initialize DB schema
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
+          mysql -h 127.0.0.1 -P 3306 -u root -proot hms_test < src/server/db/schema.sql
+
+      - name: Run Jest tests
+        env:
+          NODE_ENV: test
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASSWORD: root
+          DB_NAME: hms_test
+        run: npm test -- --coverage --watchAll=false --runInBand --forceExit
+
+      - name: Upload Coverage Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+
+      - name: Run ESLint
+        run: npm run lint || true

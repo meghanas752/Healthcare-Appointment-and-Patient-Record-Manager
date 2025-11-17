@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>HMPRS — signup</title>
+  <link rel="stylesheet" href="signup.css" />
+</head>
+<body>
+  <div class="signup-container">
+    <h1>Secure User Signup</h1>
+    <form id="signupForm">
+      <label for="username">Username</label>
+      <input id="username" name="username" type="text" required />
+
+      <label for="email">Email</label>
+      <input id="email" name="email" type="text" required />
+
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" required />
+
+      <label>Role</label>
+      <div id="role-buttons" class="role-buttons">
+       <button type="button" class="role-btn" data-role="Doctor">Doctor</button>
+       <button type="button" class="role-btn" data-role="Staff">Staff</button>
+       <button type="button" class="role-btn" data-role="Pharmacist">Pharmacist</button>
+      </div>
+
+<!-- Hidden input to store selected role -->
+      <input type="hidden" id="role" name="role" required />
+
+
+      
+
+      <button type="submit">Signup</button>
+      <p class="redirect-text">
+  Already registered? <a href="login1.html">Login here</a>
+</p>
+
+    </form>
+    <div id="message" class="msg"></div>
+  </div>
+
+  <script src="signup.js"></script>
+</body>
+</html>

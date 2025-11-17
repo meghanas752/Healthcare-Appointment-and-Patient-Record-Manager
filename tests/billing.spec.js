@@ -1,11 +1,9 @@
 const request = require('supertest');
 
-// --- Mock the entire db module BEFORE 'app' is imported ---
-const db = require('../src/backend/db.js');
+// Mock DB before importing app
 jest.mock('../src/backend/db.js', () => ({
-  // Mock all db functions
   pool: {
-    query: jest.fn(), // This is what the billing route calls
+    query: jest.fn(),
     end: jest.fn(),
   },
   createTreatment: jest.fn(),
@@ -21,58 +19,44 @@ jest.mock('../src/backend/db.js', () => ({
   createUser: jest.fn(),
 }));
 
-// Now we can import the app. It will get the MOCKED db.
+const db = require('../src/backend/db.js');
 const app = require('../src/server/server.js');
 
-describe('Billing API Route', () => {
+describe("Billing API Route", () => {
 
-  // Reset mocks before each test
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
+  beforeEach(() => jest.clearAllMocks());
 
-  test('should return 200 and a correct bill on success', async () => {
-    // 1. Arrange
-    const mockData = {
-      // mysql2 returns [rows, fields]
-      consultations: [[{ item: 'Consultation', cost: 100 }], []],
-      medicines: [[{ item: 'Medicine', cost: 50 }], []],
-      treatments: [[{ item: 'Treatment', cost: 75 }], []],
-      allergies: [[{ item: 'Allergy Test', cost: 0 }], []],
-      diagnoses: [[{ item: 'Diagnosis', cost: 0 }], []]
-    };
+  test("should return 200 and total bill on success", async () => {
+    // Mock DB rows for a prescription
+    const mockRows = [
+      { drug_code: "A", qty: 1, unit_price: 100, total: 100 },
+      { drug_code: "B", qty: 1, unit_price: 50, total: 50 },
+      { drug_code: "C", qty: 1, unit_price: 75, total: 75 },
+    ];
 
-    // We now mock 'db.pool.query' since that's what the route calls
-    db.pool.query
-      .mockResolvedValueOnce(mockData.consultations)
-      .mockResolvedValueOnce(mockData.medicines)
-      .mockResolvedValueOnce(mockData.treatments)
-      .mockResolvedValueOnce(mockData.allergies)
-      .mockResolvedValueOnce(mockData.diagnoses);
+    // Your route calls pool.query ONCE
+    db.pool.query.mockResolvedValueOnce([mockRows, []]);
 
-    // 2. Act
-    // --- THIS IS THE FIX: Removed '/api' ---
-    const res = await request(app).get('/billing/1');
+    const res = await request(app).get("/pharmacy/final-bill/1");
 
-    // 3. Assert
     expect(res.status).toBe(200);
-    expect(res.body.total).toBe('225.00'); // 100 + 50 + 75
-    expect(db.pool.query).toHaveBeenCalledTimes(5);
+
+    // total is a number (100 + 50 + 75 = 225)
+    expect(res.body.total).toBe(225);
+
+    expect(db.pool.query).toHaveBeenCalledTimes(1);
   });
 
-  test('should return 500 when the database fails', async () => {
-    // 1. Arrange
-    // Mock the *first* query call to throw an error
-    db.pool.query.mockRejectedValue(new Error('Database connection failed'));
+  test("should return 500 when database fails", async () => {
+    db.pool.query.mockRejectedValueOnce(new Error("DB Error"));
 
-    // 2. Act
-    // --- THIS IS THE FIX: Removed '/api' ---
-    const res = await request(app).get('/billing/1');
+    const res = await request(app).get("/pharmacy/final-bill/1");
 
-    // 3. Assert
     expect(res.status).toBe(500);
-    expect(res.body.error).toBe('Database error occurred.');
-    expect(db.pool.query).toHaveBeenCalledTimes(1); // It only tried once
-  });
 
+    // Server sends plain text message
+    expect(res.text).toBe("Error generating bill");
+
+    expect(db.pool.query).toHaveBeenCalledTimes(1);
+  });
 });

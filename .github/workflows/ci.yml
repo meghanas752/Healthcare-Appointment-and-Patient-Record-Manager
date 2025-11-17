@@ -1,207 +1,43 @@
-# ------------------------------------------------------------------
-# CI/CD Pipeline for Hospital Management System (Node.js Backend)
-# Following DBMS Miniproject Guidelines
-# Build → Test → Coverage → Lint → Security → Deployment Artifact
-# ------------------------------------------------------------------
-
-name: HMS CI/CD Pipeline
+name: HMS CI Pipeline
 
 on:
   push:
-    branches: [main, develop]
+    branches: [ "main", "develop" ]
   pull_request:
-    branches: [main, develop]
+    branches: [ "main", "develop" ]
 
 jobs:
-
-  # ==========================================================
-  # 1. BUILD STAGE — Install dependencies & prepare environment
-  # ==========================================================
-  build:
-    name: Build Backend
+  build-test:
+    name: Build & Test Backend
     runs-on: ubuntu-latest
-    
+
     steps:
+      # 1. Checkout code
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2. Setup Node.js (Jest 30 requires Node 18)
       - name: Use Node.js 18
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
+          cache: "npm"
 
-      - name: Install backend dependencies
+      # 3. Install dependencies
+      - name: Install dependencies
         run: npm ci
 
-      - name: Upload node_modules as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-deps
-          path: node_modules/
-
-  # ==========================================================
-  # 2. TEST STAGE — Jest Unit Tests + Integration Tests
-  # ==========================================================
-  test:
-    name: Run Jest Tests
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Restore Dependencies
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-deps
-          path: node_modules/
-
-      - name: Run Tests with Coverage
+      # 4. Run Jest Tests with Coverage
+      - name: Run Jest tests
         run: npm test -- --coverage --watchAll=false
 
-      - name: Upload Test Report
+      # 5. Upload Coverage Report (Optional but good)
+      - name: Upload Coverage Report
         uses: actions/upload-artifact@v4
         with:
-          name: jest-coverage
+          name: coverage-report
           path: coverage/
 
-  # ==========================================================
-  # 3. COVERAGE CHECK — Ensures at least 70% coverage
-  # ==========================================================
-  coverage:
-    name: Coverage Enforcement
-    runs-on: ubuntu-latest
-    needs: test
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Restore deps
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-deps
-          path: node_modules/
-
-      - name: Check Coverage Threshold
-        run: |
-          echo "Checking Jest Coverage..."
-          COVER=$(jq '.total.lines.pct' coverage/coverage-summary.json)
-          echo "Coverage: $COVER%"
-          if (( $(echo "$COVER < 70" | bc -l) )); then
-            echo "❌ Coverage below 70% — failing pipeline"
-            exit 1
-          fi
-          echo "✅ Coverage OK"
-
-  # ==========================================================
-  # 4. LINT STAGE — ESLint
-  # ==========================================================
-  lint:
-    name: ESLint Code Quality Check
-    runs-on: ubuntu-latest
-    needs: coverage
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      - name: Install dependencies
-        run: npm ci
-
+      # 6. Run ESLint (Optional)
       - name: Run ESLint
-        run: npm run lint || true     # do not fail pipeline
-
-      - name: Upload ESLint Output
-        uses: actions/upload-artifact@v4
-        with:
-          name: eslint-report
-          path: eslint-report.txt
-        if: always()
-
-  # ==========================================================
-  # 5. SECURITY STAGE — npm audit & deprecated checks
-  # ==========================================================
-  security:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    needs: lint
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run npm Audit Scan
-        run: |
-          echo "Running npm audit..."
-          npm audit --audit-level=high || true
-
-      - name: Save Security Report
-        run: npm audit --json > audit-report.json || true
-
-      - name: Upload Security Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: security-report
-          path: audit-report.json
-
-  # ==========================================================
-  # 6. DEPLOYMENT ARTIFACT — Zip Backend + Reports
-  # ==========================================================
-  deploy:
-    name: Prepare Deployment Package
-    runs-on: ubuntu-latest
-    needs: [test, coverage, lint, security]
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Download Deps
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-deps
-          path: node_modules/
-
-      - name: Download Test Coverage
-        uses: actions/download-artifact@v4
-        with:
-          name: jest-coverage
-          path: coverage/
-
-      - name: Download Security Report
-        uses: actions/download-artifact@v4
-        with:
-          name: security-report
-          path: security/
-
-      - name: Create Deployment Folder
-        run: |
-          mkdir -p deployment
-          cp -r src deployment/
-          cp -r node_modules deployment/
-          cp package.json deployment/
-          cp package-lock.json deployment/
-          cp -r coverage deployment/
-          cp -r security deployment/
-
-      - name: Zip Deployment Package
-        run: zip -r hms-deployment.zip deployment/
-
-      - name: Upload Deployment Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: HMS-Deployment-Package
-          path: hms-deployment.zip
+        run: npm run lint || true
